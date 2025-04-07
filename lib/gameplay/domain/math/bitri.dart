@@ -1,4 +1,4 @@
-import 'package:quail_57/math/tri.dart';
+import 'package:quail_57/gameplay/domain/math/tri.dart';
 
 /// 2d trinary variable, uniquely identifies a set of 9 subsquares
 class BiTri {
@@ -32,12 +32,6 @@ class BiTri {
       (a) => Tri.all.map((b) => BiTri(a, b)),
     );
     return allowMiddle ? ret : ret.where((bt) => !bt.isMiddle);
-  }
-
-  static BiTri random({bool allowMiddle = false}) {
-    BiTri ret = BiTri(Tri.random, Tri.random);
-    if (ret.isMiddle) return random(allowMiddle: allowMiddle);
-    return ret;
   }
 
   @override

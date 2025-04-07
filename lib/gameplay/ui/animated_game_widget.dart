@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/math/coordinate.dart';
-import 'package:quail_57/math/tree.dart';
+import 'package:quail_57/gameplay/domain/math/coordinate.dart';
+import 'package:quail_57/gameplay/domain/tree.dart';
+import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/shared/ui/size_is_tall.dart';
 
 class AnimatedGameWidget extends StatefulWidget {
   final Size size;
@@ -30,13 +34,18 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
 
   Tree fromTree = Tree.initial();
   ZoomedViewport fromViewport = ZoomedViewport.initial;
-  ZoomedViewport get viewport =>
-      fromViewport.lerpTo(viewportOf(tree), 1 - animation.value);
   ZoomedViewport viewportOf(Tree tree) {
+    return fromViewport.lerpTo(rawViewportOf(tree), 1 - animation.value);
+  }
+
+  ZoomedViewport rawViewportOf(Tree tree) {
     return ZoomedViewport(
       window: tree.root?.rect() ?? Rect.fromLTWH(0, 0, 1, 1),
     );
   }
+
+  late Timer timer;
+  int idleValue = 0;
 
   late Animation<double> animation;
   late AnimationController controller;
@@ -48,8 +57,18 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   @override
   void initState() {
     super.initState();
+    initAnimation();
+    initIdleTimer();
+    initViewport();
+  }
+
+  initViewport() {
+    fromViewport = rawViewportOf(tree);
+  }
+
+  initAnimation() {
     controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: Duration(milliseconds: Settings.animationSpeed),
       vsync: this,
     );
     animation = Tween<double>(begin: 0, end: 1).animate(controller)
@@ -58,7 +77,21 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
           // The state that has changed here is the animation object's value.
         });
       });
-    controller.forward();
+  }
+
+  initIdleTimer() {
+    timer = Timer.periodic(Duration(milliseconds: 200), (timer) {
+      setState(() {
+        idleValue = idleValue == 0 ? 1 : 0; // Toggle between 0 and 1
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -67,14 +100,14 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
       size: size,
       child: GestureDetector(
         onTapUp: onTap,
-        child: ClipRRect(
-          child: CustomPaint(
-            painter: GameplayPainter(
-              fromTree: fromTree,
-              tree: tree,
-              viewport: viewport,
-              animation: animation,
-            ),
+        child: CustomPaint(
+          painter: GameplayPainter(
+            fromTree: fromTree,
+            tree: tree,
+            viewport: viewportOf(tree),
+            animation: animation,
+            idleValue: idleValue,
+            isTall: MediaQuery.of(context).size.isTall,
           ),
         ),
       ),
@@ -83,14 +116,14 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
 
   void onTap(TapUpDetails tapDetails) {
     Offset tap = tapDetails.localPosition;
-    double dim = MediaQuery.of(context).size.width;
+    double dim = MediaQuery.of(context).size.lesser;
     // Rect size = Rect.fromLTWH(0, 0, dim, dim);
     Rect unit = Rect.fromLTWH(0, 0, 1, 1);
 
     bool check(Coordinate? space) =>
         space
             ?.rect(unit: unit)
-            .contains(viewport.inverseTransform(tap, Size(dim, dim))) ??
+            .contains(viewportOf(tree).inverseTransform(tap, Size(dim, dim))) ??
         false;
 
     Coordinate? current = tree.whereYou,
@@ -111,12 +144,19 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   void moveTo(Coordinate? newYou) {
     if (newYou == null) return;
     Tree newTree = tree.moveYouTo(newYou);
+
+    // try to rebase!
+    int? rebasableBy = newTree.rebasableBy;
     setState(() {
-      fromViewport = viewport;
       fromTree = tree;
+      if (rebasableBy != null) {
+        newTree = newTree.rebase(rebasableBy);
+        fromTree = fromTree.rebase(rebasableBy);
+      }
+      fromViewport = rawViewportOf(fromTree);
     });
+    setTree(newTree);
     controller.reset();
     controller.forward();
-    setTree(newTree);
   }
 }

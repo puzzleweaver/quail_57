@@ -2,18 +2,20 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:quail_57/math/bitri.dart';
-import 'package:quail_57/math/tri.dart';
+import 'package:quail_57/gameplay/domain/math/bitri.dart';
+import 'package:quail_57/gameplay/domain/math/tri.dart';
 
 class Coordinate {
   final List<BiTri> sequence;
-  Coordinate(this.sequence);
+  final int depthOffset;
+  Coordinate(this.sequence, this.depthOffset);
 
-  int get depth => sequence.length;
+  int get length => sequence.length;
+  int get depth => depthOffset + length;
 
-  static Coordinate get zero => Coordinate([]);
-  Coordinate get into => Coordinate([...sequence, BiTri.middle]);
-  Coordinate? get outof => Coordinate(withoutLast);
+  static Coordinate get zero => Coordinate([], 0);
+  Coordinate get into => Coordinate([...sequence, BiTri.middle], depthOffset);
+  Coordinate? get outof => Coordinate(withoutLast, depthOffset);
   Coordinate? get left => replaceLast(last?.left);
   Coordinate? get down => replaceLast(last?.down);
   Coordinate? get up => replaceLast(last?.up);
@@ -21,23 +23,52 @@ class Coordinate {
   BiTri? get last => sequence.lastOrNull;
   Coordinate? replaceLast(BiTri? newLast) {
     if (newLast == null) return null;
-    return Coordinate([...withoutLast, newLast]);
+    return Coordinate([...withoutLast, newLast], depthOffset);
+  }
+
+  Coordinate? rebase(int byDepth) {
+    if (byDepth == 0) return this;
+    BiTri makeUpCoordinate(int i) => switch (i % 4) {
+      0 => BiTri(Tri.mid, Tri.low),
+      1 => BiTri(Tri.low, Tri.mid),
+      2 => BiTri(Tri.mid, Tri.hi),
+      _ => BiTri(Tri.hi, Tri.mid),
+    };
+
+    return Coordinate([
+      for (int i = byDepth; i < length; i++)
+        if (i >= 0 && i < length) sequence[i] else makeUpCoordinate(i),
+    ], depthOffset + byDepth);
+  }
+
+  bool get isValid {
+    if (withoutLast.contains(BiTri.middle)) return false;
+    return true;
+  }
+
+  Coordinate? withOffset(BiTri? offset) {
+    if (offset == null) return this;
+    List<Tri> as = sequence.map((bt) => bt.a).toList();
+    List<Tri> bs = sequence.map((bt) => bt.b).toList();
+    List<Tri>? nas = Tri.carry(as, offset.a);
+    List<Tri>? nbs = Tri.carry(bs, offset.b);
+    if (nas == null || nbs == null) return null;
+    return Coordinate([
+      for (int i = 0; i < nas.length; i++) BiTri(nas[i], nbs[i]),
+    ], depthOffset);
   }
 
   Coordinate get randomStep {
-    List<Coordinate> dupe(int howMany, Coordinate? where) =>
-        where == null ? [] : [for (int i = 0; i < howMany; i++) where];
-    List<Coordinate> options =
+    List<Coordinate> choices =
         [
-          ...dupe(1, into),
-          ...dupe(1, outof),
-          ...dupe(3, right),
-          ...dupe(3, left),
-          ...dupe(3, up),
-          ...dupe(3, down),
-        ].toList();
-    if (options.isEmpty) return this;
-    return options[Random().nextInt(options.length)];
+          left,
+          down,
+          up,
+          right,
+          if (!isMiddle) into,
+          if (isMiddle) outof,
+        ].whereType<Coordinate>().toList();
+    return choices[Random().nextInt(choices.length)];
   }
 
   List<BiTri> get withoutLast {
@@ -47,17 +78,9 @@ class Coordinate {
 
   bool get isMiddle => last?.isMiddle ?? false;
 
-  static Coordinate random(int minDepth, int maxDepth) {
-    int actualDepth = minDepth + Random().nextInt(maxDepth - minDepth);
-    return Coordinate([
-      for (int i = 0; i < actualDepth; i++)
-        BiTri.random(allowMiddle: i == actualDepth - 1),
-    ]);
-  }
-
   List<Coordinate> get next =>
       BiTri.all()
-          .map((bt) => into?.replaceLast(bt))
+          .map((bt) => into.replaceLast(bt))
           .whereType<Coordinate>()
           .toList();
 
@@ -93,6 +116,7 @@ class Coordinate {
   @override
   bool operator ==(Object other) {
     if (other is! Coordinate) return false;
+    if (sequence.length != other.sequence.length) return false;
     return [
       for (int i = 0; i < sequence.length; i++)
         sequence[i] == other.sequence.elementAtOrNull(i),

@@ -1,0 +1,75 @@
+import 'dart:ui' as ui;
+
+import 'package:quail_57/gameplay/domain/entity/entity.dart';
+import 'package:quail_57/shared/data/sprites.dart';
+import 'package:quail_57/shared/ui/list_choice.dart';
+
+class Emmy extends Entity {
+  final EmmyType emmyType;
+  Emmy({super.id, required this.emmyType, super.previousMove, EntityType? type})
+    : super(type: type ?? EntityType.emmy);
+
+  Emmy withEmmyType(EmmyType newEmmyType) {
+    return Emmy(
+      id: id,
+      type: type,
+      previousMove: previousMove,
+      emmyType: newEmmyType,
+    );
+  }
+}
+
+enum EmmyType {
+  antLarva(2, 6, 2),
+  ant(5, 7, 7),
+  antQueen(10, 0, 0),
+  wasp(5, 0, 0),
+  termite(5, 5, 5), // AVERAGE GUY
+  bigTermite(7, 7, 5),
+  grub(20, 3, 1)
+  // yet unimplemented:
+  // scarab(0, 0, 0),
+  // tarantula(0, 0, 0),
+  // beetle(0, 0, 0),
+  ;
+
+  // 1 is "immediately dies", 5 is "takes a hit", 10 is "takes 3+ hits"
+  final int health;
+  // 1 is "barely touches you", 5 is "hits you", 10 is "immediately kills you"
+  final int attack;
+  // 1 is "barely has hunger", 5 is "needs food sometimes", 10 is "constantly eating"
+  final int hungriness;
+  const EmmyType(this.health, this.attack, this.hungriness);
+
+  static List<EmmyType> get all => [
+    antLarva,
+    ant,
+    antQueen,
+    wasp,
+    termite,
+    bigTermite,
+    grub,
+  ];
+
+  List<ui.Image>? get images {
+    return switch (this) {
+      antLarva => Sprites.antLarva,
+      EmmyType.ant => Sprites.ant,
+      EmmyType.antQueen => Sprites.antQueen,
+      EmmyType.wasp => Sprites.wasp,
+      EmmyType.termite => Sprites.termite,
+      EmmyType.bigTermite => Sprites.bigTermite,
+      EmmyType.grub => Sprites.grub,
+    };
+  }
+
+  ui.Image? frame(int idleValue) {
+    switch (this) {
+      case antLarva:
+      case grub:
+        return images?[idleValue];
+      case _:
+        return images?.choice;
+    }
+  }
+}
