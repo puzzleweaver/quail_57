@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/home/ui/home_page_background.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget child;

@@ -1,13 +1,15 @@
 import 'dart:developer';
 
 import 'package:quail_57/gameplay/domain/entity/emmy.dart';
-import 'package:quail_57/gameplay/domain/math/bitri.dart';
-import 'package:quail_57/gameplay/domain/math/coordinate.dart';
+import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
+import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/entity/entity.dart';
-import 'package:quail_57/gameplay/domain/entity/you.dart';
-import 'package:quail_57/gameplay/domain/move_type.dart';
+import 'package:quail_57/gameplay/domain/move_changes.dart';
 import 'package:quail_57/gameplay/domain/space.dart';
+import 'package:quail_57/gameplay/domain/space_type.dart';
 import 'package:quail_57/shared/data/generate.dart';
+import 'package:quail_57/shared/ui/list_choice.dart';
 
 class Tree {
   final Map<Coordinate, Space> map;
@@ -15,6 +17,12 @@ class Tree {
   final int turns;
 
   Tree({required this.map, required this.depthOffset, required this.turns}) {
+    map.entries.where((entry) => !entry.key.isValid).map((entry) {
+      Coordinate coordinate = entry.key;
+      Space? space = map[coordinate];
+      if (space != null) map[coordinate] = space.withEntity(null);
+      return "";
+    });
     int emmyCount = allEmmies().length;
     String report = [
       "",
@@ -30,6 +38,10 @@ class Tree {
     log(report);
   }
 
+  bool get youLost => whereYou == null;
+  bool get youWon => this[whereYou].type == SpaceType.goal;
+  bool get isEndgame => youWon || youLost;
+
   int get thingCount => map.length;
 
   static Tree initial() {
@@ -37,7 +49,7 @@ class Tree {
       map: {
         Generate.coordinate(3, last: BiTri.middle): Generate.space(
           0,
-        ).withEntity(You()),
+        ).withEntity(Emmy.create(EmmyType.all.choice, isYou: true)),
       },
       depthOffset: 0,
       turns: 0,
@@ -146,9 +158,9 @@ class Tree {
   MapEntry<Coordinate, Space>? get _youEntry =>
       map.entries.where((e) => e.value.isYou).firstOrNull;
   Coordinate? get whereYou => _youEntry?.key;
-  You? get you {
+  Emmy? get you {
     Entity? entity = _youEntry?.value.entity;
-    if (entity is! You) return null;
+    if (entity is! Emmy || entity.isYou != true) return null;
     return entity;
   }
 
@@ -163,7 +175,7 @@ class Tree {
     );
     void makeMove(Coordinate? from, Coordinate? to) {
       if (newTree.isMoveAllowed(from, to)) {
-        newTree.map.addAll(newTree._moveChanges(from, to));
+        newTree.map.addAll(newTree.moveChanges(from, to));
       }
     }
 
@@ -175,42 +187,30 @@ class Tree {
     // move emmies
     for (Coordinate whereEmmy in newTree.allEmmies().toList()) {
       Coordinate whereEmmyGo = whereEmmy.randomStep;
-      if (!whereEmmyGo.isValid) newTree.removeEntity(whereEmmyGo);
+      if (!whereEmmy.isValid || !whereEmmyGo.isValid) {
+        newTree.removeEntity(whereEmmy);
+      }
       makeMove(whereEmmy, whereEmmyGo);
     }
+
+    if (you?.age == null) newTree = newTree.setEntity(whereYou, null);
 
     return newTree;
   }
 
-  /// this should only check like. Is there floor in the way
+  Map<Coordinate, Space> moveChanges(Coordinate? from, Coordinate? to) {
+    if (from == null || to == null) return {};
+    return MoveChanges(this, from, to).asMap;
+  }
+
+  /// check if there is a wall
   bool isMoveAllowed(Coordinate? from, Coordinate? to) {
     if (from == null || to == null) return false;
     if (from.into == to && this[from].hasFloor) return false;
     return true;
   }
 
-  Map<Coordinate, Space> _moveChanges(Coordinate? from, Coordinate? to) {
-    if (from == null || to == null) return {};
-    Space fromSpace = this[from];
-    Space toSpace = this[to];
-    Entity? mover = fromSpace.entity;
-    Entity? target = toSpace.entity;
-
-    // if (target == null)
-    if (mover?.type == EntityType.you) {
-      return MoveType.normal.changes(this, from, to);
-    }
-    return {};
-    // return switch (mover) {
-    //   (EntityType.you) => switch (target) {
-    //     // How do different guys interact??
-    //   },
-    //   (EntityType.emmy) => switch (target) {},
-    //   _ => MoveType.none,
-    // };
-  }
-
   Tree setYou(EmmyType type) {
-    return setEntity(whereYou, (you as You).withEmmyType(type));
+    return setEntity(whereYou, you?.withEmmyType(type));
   }
 }

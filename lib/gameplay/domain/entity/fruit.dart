@@ -5,7 +5,8 @@ import 'package:quail_57/shared/data/sprites.dart';
 
 class Fruit extends Entity {
   final FruitType fruitType;
-  Fruit({super.id, required this.fruitType}) : super(type: EntityType.fruit);
+  Fruit({required super.id, required this.fruitType})
+    : super(type: EntityType.fruit);
 }
 
 enum FruitType {

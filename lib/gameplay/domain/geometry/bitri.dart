@@ -1,4 +1,4 @@
-import 'package:quail_57/gameplay/domain/math/tri.dart';
+import 'package:quail_57/gameplay/domain/geometry/tri.dart';
 
 /// 2d trinary variable, uniquely identifies a set of 9 subsquares
 class BiTri {

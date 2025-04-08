@@ -2,8 +2,8 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:quail_57/gameplay/domain/math/bitri.dart';
-import 'package:quail_57/gameplay/domain/math/tri.dart';
+import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
+import 'package:quail_57/gameplay/domain/geometry/tri.dart';
 
 class Coordinate {
   final List<BiTri> sequence;

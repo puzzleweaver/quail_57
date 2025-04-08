@@ -21,7 +21,4 @@ class Space {
   bool get isYou => entity?.isYou ?? false;
   bool get isEmmy => entity?.isEmmy ?? false;
   bool get isFruit => entity?.isFruit ?? false;
-  bool get moves => entity?.moves ?? false;
-
-  bool get isOccupied => entity?.isOccupied ?? false;
 }

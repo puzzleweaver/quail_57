@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:quail_57/gameplay/domain/entity/emmy.dart';
+import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/math/coordinate.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
 import 'package:quail_57/settings/domain/setting.dart';
 import 'package:quail_57/shared/ui/size_is_tall.dart';

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:quail_57/gameplay/domain/space.dart';
-import 'package:quail_57/home/ui/home_page_background_painter.dart';
+import 'package:quail_57/pages/ui/home_page_background_painter.dart';
 import 'package:quail_57/shared/data/generate.dart';
 import 'package:quail_57/shared/ui/pair_first_second.dart';
-import 'package:quail_57/shared/ui/time_util.dart';
 
 class HomePageBackground extends StatefulWidget {
   const HomePageBackground({super.key});

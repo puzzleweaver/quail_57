@@ -44,7 +44,9 @@ class Sprites {
 
   static ui.Image? apple;
   static ui.Image? log;
-  static ui.Image? goalTile;
+
+  static ui.Image? goal;
+  static ui.Image? lock;
 
   static Future<ui.Image> _load(String asset) async {
     return rootBundle
@@ -99,7 +101,9 @@ class Sprites {
 
       _load(Assets.fruit).then((result) => apple = result),
       _load(Assets.log).then((result) => log = result),
-      _load(Assets.goal).then((result) => goalTile = result),
+
+      _load(Assets.goal).then((result) => goal = result),
+      _load(Assets.lock).then((result) => lock = result),
     ]);
   }
 }

@@ -1,4 +1,3 @@
-// trinary "primitive"
 import 'dart:math';
 
 enum Tri {

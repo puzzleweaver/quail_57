@@ -1,12 +1,7 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_tables.dart';
-import 'package:quail_57/gameplay/ui/gameplay_page.dart';
-import 'package:quail_57/shared/data/assets.dart';
-import 'package:quail_57/shared/ui/go_to.dart';
-import 'package:quail_57/shared/ui/size_is_tall.dart';
+import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/select_bug/ui/bug_info_dialog.dart';
+import 'package:quail_57/select_bug/ui/bug_pane.dart';
 
 class BugSelectionButton extends StatelessWidget {
   final EmmyType type;
@@ -16,12 +11,13 @@ class BugSelectionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     onPressed() {
-      goTo(context, (context) => GameplayPage(initialBug: type), replace: true);
+      // goTo(context, (context) => GameplayPage(initialBug: type), replace: true);
+      showDialog(
+        context: context,
+        builder: (context) => BugInfoDialog(type: type),
+      );
     }
 
-    double lesser = MediaQuery.of(context).size.lesser;
-    ui.Image? image = type.frame(0);
-    if (image == null) return Image.asset(Assets.goal);
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(
@@ -29,25 +25,10 @@ class BugSelectionButton extends StatelessWidget {
         ),
         minimumSize: Size.zero,
         padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       onPressed: onPressed,
-      child: Container(
-        padding: EdgeInsets.all(5),
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            SizedBox.square(
-              dimension: lesser / 3.5,
-              child: RawImage(
-                image: image,
-                fit: BoxFit.fill,
-                filterQuality: FilterQuality.none,
-              ),
-            ),
-            Text([type.title, "(${type.difficulty})"].join("\n")),
-          ],
-        ),
-      ),
+      child: BugPane(type: type, showName: true),
     );
   }
 }

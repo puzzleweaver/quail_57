@@ -17,10 +17,22 @@ class SettingsPage extends StatelessWidget {
             children: [
               SettingWidget(field: SettingField.animationSpeed),
               // SettingWidget(field: SettingField.animationSpeed),
+              // status(SettingField.maxKills, Settings.maxKills),
+              // status(SettingField.gamesLost, Settings.gamesLost),
+              // status(SettingField.gamesWon, Settings.gamesWon),
+              // status(SettingField.gamesPlayed, Settings.gamesPlayed),
+              // status(SettingField.maxTurnsSurvived, Settings.maxTurnsSurvived),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget status(SettingField field, dynamic value) {
+    return Text(
+      "${field.title}: $value",
+      style: TextStyle(color: Colors.white),
     );
   }
 }

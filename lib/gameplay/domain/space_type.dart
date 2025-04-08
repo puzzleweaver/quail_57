@@ -52,7 +52,7 @@ enum SpaceType {
       lightLeaf => Sprites.leafTile1,
       darkLeaf => Sprites.leafTile2,
       bark => Sprites.barkBackground,
-      goal => Sprites.goalTile,
+      goal => Sprites.goal,
     };
   }
 }

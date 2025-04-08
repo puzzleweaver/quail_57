@@ -1,75 +1,83 @@
-import 'dart:ui' as ui;
+import 'dart:math';
 
+import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
 import 'package:quail_57/gameplay/domain/entity/entity.dart';
-import 'package:quail_57/shared/data/sprites.dart';
-import 'package:quail_57/shared/ui/list_choice.dart';
+import 'package:quail_57/gameplay/domain/entity/fruit.dart';
+import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
+import 'package:quail_57/gameplay/domain/move_type.dart';
+import 'package:quail_57/shared/data/generate.dart';
 
 class Emmy extends Entity {
   final EmmyType emmyType;
-  Emmy({super.id, required this.emmyType, super.previousMove, EntityType? type})
-    : super(type: type ?? EntityType.emmy);
+  final int health;
+  final int belly;
+  final MoveType? previousMove;
+  @override
+  final bool isYou;
+  final int kills;
+
+  int get attack => emmyType.attack;
+  int get baseHealth => emmyType.health;
+  int get hungriness => emmyType.hungriness;
+
+  Emmy({
+    required super.id,
+    required super.type,
+    required this.health,
+    required this.belly,
+    required this.emmyType,
+    required this.previousMove,
+    required this.isYou,
+    required this.kills,
+  });
+
+  factory Emmy.create(
+    EmmyType emmyType, {
+    EntityType? type,
+    String? id,
+    bool? isYou,
+  }) {
+    return Emmy(
+      id: id ?? Generate.id,
+      type: type ?? EntityType.emmy,
+      emmyType: emmyType,
+      health: emmyType.health,
+      belly: 100,
+      previousMove: null,
+      isYou: isYou ?? false,
+      kills: 0,
+    );
+  }
 
   Emmy withEmmyType(EmmyType newEmmyType) {
+    return Emmy.create(newEmmyType, type: type, id: id, isYou: isYou);
+  }
+
+  @override
+  Emmy? get age {
+    int newBelly = belly - emmyType.hungriness;
+    if (newBelly < 0) return null;
+    return withBelly(newBelly);
+  }
+
+  Emmy withBelly(int newBelly) {
     return Emmy(
       id: id,
       type: type,
+      health: health,
+      belly: newBelly,
+      emmyType: emmyType,
       previousMove: previousMove,
-      emmyType: newEmmyType,
+      isYou: isYou,
+      kills: kills,
     );
   }
-}
 
-enum EmmyType {
-  antLarva(2, 6, 2),
-  ant(5, 7, 7),
-  antQueen(10, 0, 0),
-  wasp(5, 0, 0),
-  termite(5, 5, 5), // AVERAGE GUY
-  bigTermite(7, 7, 5),
-  grub(20, 3, 1)
-  // yet unimplemented:
-  // scarab(0, 0, 0),
-  // tarantula(0, 0, 0),
-  // beetle(0, 0, 0),
-  ;
+  Emmy blocked(Coordinate to) => this;
+  Emmy eatFruit(Coordinate from, Fruit fruit) =>
+      withBelly(min(belly + 50, 100));
 
-  // 1 is "immediately dies", 5 is "takes a hit", 10 is "takes 3+ hits"
-  final int health;
-  // 1 is "barely touches you", 5 is "hits you", 10 is "immediately kills you"
-  final int attack;
-  // 1 is "barely has hunger", 5 is "needs food sometimes", 10 is "constantly eating"
-  final int hungriness;
-  const EmmyType(this.health, this.attack, this.hungriness);
-
-  static List<EmmyType> get all => [
-    antLarva,
-    ant,
-    antQueen,
-    wasp,
-    termite,
-    bigTermite,
-    grub,
-  ];
-
-  List<ui.Image>? get images {
-    return switch (this) {
-      antLarva => Sprites.antLarva,
-      EmmyType.ant => Sprites.ant,
-      EmmyType.antQueen => Sprites.antQueen,
-      EmmyType.wasp => Sprites.wasp,
-      EmmyType.termite => Sprites.termite,
-      EmmyType.bigTermite => Sprites.bigTermite,
-      EmmyType.grub => Sprites.grub,
-    };
-  }
-
-  ui.Image? frame(int idleValue) {
-    switch (this) {
-      case antLarva:
-      case grub:
-        return images?[idleValue];
-      case _:
-        return images?.choice;
-    }
+  bool get isInDanger {
+    return belly < 20 || health < baseHealth / 4;
   }
 }

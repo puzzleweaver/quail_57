@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
+import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/ui/gameplay_renderer.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/math/bitri.dart';
-import 'package:quail_57/gameplay/domain/math/coordinate.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
 
 class GameplayPainter extends CustomPainter {
@@ -43,7 +43,7 @@ class GameplayPainter extends CustomPainter {
     // );
 
     Coordinate? root = tree.root;
-    renderer.setBackground(root?.depth);
+    renderer.drawDepthOverlay(root?.depth);
 
     void treeFrom(Coordinate? root) {
       renderer.drawTree(previousTree: fromTree, tree: tree, root: root);
@@ -64,6 +64,10 @@ class GameplayPainter extends CustomPainter {
     } else {
       treeFrom(root?.withOffset(BiTri.middle.left));
       treeFrom(root?.withOffset(BiTri.middle.right));
+    }
+
+    if (tree.you?.isInDanger == true) {
+      if (idleValue == 1) renderer.drawOverlay(Colors.red.withAlpha(50));
     }
   }
 

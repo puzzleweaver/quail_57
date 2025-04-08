@@ -2,18 +2,16 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
+import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
+import 'package:quail_57/gameplay/domain/move_type.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/math/bitri.dart';
-import 'package:quail_57/gameplay/domain/math/coordinate.dart';
 import 'package:quail_57/gameplay/domain/entity/emmy.dart';
 import 'package:quail_57/gameplay/domain/entity/entity.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
-import 'package:quail_57/gameplay/domain/entity/you.dart';
 import 'package:quail_57/gameplay/domain/space.dart';
 import 'package:quail_57/gameplay/domain/space_type.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
-import 'package:quail_57/shared/data/sprites.dart';
-import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/rect_lerp.dart';
 
 class GameplayRenderer {
@@ -33,12 +31,16 @@ class GameplayRenderer {
     required this.idleValue,
   });
 
-  void setBackground(int? depth) {
+  void drawDepthOverlay(int? depth) {
+    drawOverlay(_paneColor(depth ?? 0));
+  }
+
+  void drawOverlay(Color color) {
     canvas.drawRect(
       Rect.largest,
       Paint()
         ..style = PaintingStyle.fill
-        ..color = _paneColor(depth ?? 0),
+        ..color = color,
     );
   }
 
@@ -73,7 +75,7 @@ class GameplayRenderer {
     drawSpace(root, tree[root], _rectFromCoord(root));
     return () => drawEntity(
       where: root,
-      previousTree: previousTree,
+      fromTree: previousTree,
       entity: tree[root].entity,
     );
   }
@@ -122,37 +124,54 @@ class GameplayRenderer {
 
   void drawEntity({
     required Coordinate where,
-    required Tree previousTree,
+    required Tree fromTree,
     required Entity? entity,
   }) {
     if (entity == null) return;
     Rect rect = _rectFromCoord(where);
 
-    Entity? previousEntity = previousTree[where].entity;
+    Entity? previousEntity = fromTree[where].entity;
     if (previousEntity?.isFruit == true && !animation.isCompleted) {
       drawFruit(previousEntity as Fruit, rect);
     }
 
-    if (entity.moves) {
-      Rect toRect = rect;
-      Coordinate? fromRoot = previousTree.findEntity(entity);
-      if (fromRoot != null) {
-        Rect fromRect = _rectFromCoord(fromRoot);
-        rect = fromRect.lerpTo(toRect, animation.value);
-      }
+    if (entity is Emmy) drawEmmy(entity, rect, fromTree);
+    if (entity is Fruit) drawFruit(entity, rect);
+  }
+
+  void drawEmmy(Emmy emmy, Rect rect, Tree fromTree) {
+    MoveType? moveType = emmy.previousMove;
+
+    Rect toRect = rect;
+    Coordinate? from = fromTree.findEntity(emmy);
+    if (from != null) {
+      Rect fromRect = _rectFromCoord(from);
+      rect = fromRect.lerpTo(toRect, animation.value);
     }
 
-    if (entity.isYou) drawYou(entity as You, rect);
-    if (entity.isFruit) drawFruit(entity as Fruit, rect);
-    if (entity.isEmmy) drawEmmy(entity as Emmy, rect);
-  }
-
-  void drawYou(You you, Rect rect) {
-    drawEmmy(you as Emmy, rect);
-  }
-
-  void drawEmmy(Emmy emmy, Rect rect) {
-    drawImageRect(emmy.emmyType.frame(idleValue), rect);
+    switch (moveType) {
+      case MoveType.none:
+      case null:
+        drawImageRect(emmy.emmyType.frame(idleValue), rect);
+      case MoveType.blocked:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MoveType.normal:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MoveType.defend:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MoveType.attack:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MoveType.eat:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MoveType.die:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+    }
   }
 
   void drawFruit(Fruit fruit, Rect rect) {

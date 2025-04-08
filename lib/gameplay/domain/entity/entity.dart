@@ -1,16 +1,10 @@
-import 'dart:math';
-
-import 'package:quail_57/gameplay/domain/move_type.dart';
+enum EntityType { you, emmy, fruit }
 
 abstract class Entity {
   final EntityType type;
   final String id;
-  final MoveType? previousMove;
 
-  static final int _idSize = 10000000;
-  static String get _newId => (Random().nextInt(_idSize) + _idSize).toString();
-  Entity({String? id, required this.type, this.previousMove})
-    : id = id ?? _newId;
+  Entity({required this.id, required this.type});
 
   // static Entity? get random {
   //   double choice = Random().nextDouble() * 2;
@@ -21,11 +15,9 @@ abstract class Entity {
   bool get isYou => type == EntityType.you;
   bool get isEmmy => type == EntityType.emmy;
   bool get isFruit => type == EntityType.fruit;
-  bool get moves => isEmmy || isYou;
-  bool get isOccupied => isEmmy || isYou || isFruit;
+
+  Entity? get age => this;
 
   @override
   String toString() => "$type ${id.substring(0, 8)}";
 }
-
-enum EntityType { you, emmy, fruit }

@@ -80,6 +80,7 @@ class Assets {
 
   // TODO decorations
   static String get goal => "assets/goal.png";
+  static String get lock => "assets/lock.png";
 
   static String get dirtMask => "assets/dirt-mask.png";
   static String get woodMask => "assets/wood-mask.png";

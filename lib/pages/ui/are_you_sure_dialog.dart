@@ -20,8 +20,8 @@ class AreYouSureDialog extends StatelessWidget {
       title: Center(child: title),
       content: message,
       actions: [
-        ElevatedButton(onPressed: () => pop(context, true), child: confirm),
         ElevatedButton(onPressed: () => pop(context, false), child: cancel),
+        ElevatedButton(onPressed: () => pop(context, true), child: confirm),
       ],
     );
   }
