@@ -13,7 +13,8 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Quail 57',
+      debugShowCheckedModeBanner: false,
+      title: 'Trepth',
       theme: ThemeData(
         fontFamily: "buggy",
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red.shade900),
