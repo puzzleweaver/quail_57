@@ -1,16 +1,13 @@
-# quail_57
+# quail_57 (Trepth)
 
-A new Flutter project.
+Ludum Dare 57 theme "Depths" project! By Emma Weaver and WynterWoods.
 
-## Getting Started
+## Build the web version:
 
-This project is a starting point for a Flutter application.
+Run these commands (if you're me, at least):
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+flutter build web --base-href "/trepth/"
+rm -r ../puzzleweaver.github.io/trepth
+cp -R build/web/ ../puzzleweaver.github.io/trepth/
+```

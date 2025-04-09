@@ -15,22 +15,7 @@ migration:
     - platform: root
       create_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
       base_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-    - platform: android
-      create_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-      base_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-    - platform: ios
-      create_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-      base_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-    - platform: linux
-      create_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-      base_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-    - platform: macos
-      create_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-      base_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
     - platform: web
-      create_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-      base_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
-    - platform: windows
       create_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
       base_revision: 20e7f8db473e9f0791eb711fafa118f5af92533e
 
