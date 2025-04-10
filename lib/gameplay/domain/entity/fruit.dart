@@ -1,12 +1,13 @@
 import 'dart:ui' as ui;
 
-import 'package:quail_57/gameplay/domain/entity/entity.dart';
 import 'package:quail_57/shared/data/sprites.dart';
 
-class Fruit extends Entity {
+class Fruit {
   final FruitType fruitType;
-  Fruit({required super.id, required this.fruitType})
-    : super(type: EntityType.fruit);
+  Fruit({required this.fruitType});
+
+  static Fruit get apple => Fruit(fruitType: FruitType.apple);
+  static Fruit get log => Fruit(fruitType: FruitType.log);
 }
 
 enum FruitType {

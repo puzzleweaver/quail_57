@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy.dart';
 import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
 import 'package:quail_57/gameplay/ui/animated_game_widget.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
@@ -19,14 +18,14 @@ class GameplayPage extends StatefulWidget {
 }
 
 class GameplayPageState extends State<GameplayPage> {
-  Tree previous = Tree.initial();
-  Tree tree = Tree.initial();
+  late Tree previous;
+  late Tree tree;
 
   EmmyType get initialBug => widget.initialBug;
 
   @override
   void initState() {
-    tree = tree.setYou(initialBug);
+    previous = tree = Tree.initial(initialBug);
     super.initState();
   }
 

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
@@ -115,7 +114,7 @@ extension EmmyTypeTables on EmmyType {
       EmmyType.ant => "Ol' Reliable. Middle of the road kinda guy",
       EmmyType.antQueen =>
         "She poops out babies like theres no tomorrow. good luck",
-      EmmyType.wasp => "Sharp guy, huh",
+      EmmyType.wasp => "Pointy",
       EmmyType.termite => "This guy eats wood",
       EmmyType.bigTermite => "Still eatin wood",
       EmmyType.grub => "These make me uncomfortable...",
@@ -130,9 +129,9 @@ extension EmmyTypeTables on EmmyType {
         false,
         "i don't think you can unlock her at all right now actually !",
       ),
-      EmmyType.wasp => (false, "beat the game."),
+      EmmyType.wasp => (Settings.gamesWon > 0, "beat the game."),
       EmmyType.termite => (true, "unlocked by default."),
-      EmmyType.bigTermite => (false, "beat the game."),
+      EmmyType.bigTermite => (Settings.gamesWon > 0, "beat the game."),
       EmmyType.grub => (Settings.gamesPlayed >= 3, "play 3 rounds."),
     };
   }

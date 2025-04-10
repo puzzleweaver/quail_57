@@ -3,12 +3,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/ui/gameplay_renderer.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/space.dart';
+import 'package:quail_57/gameplay/domain/tile.dart';
 import 'package:quail_57/shared/ui/pair_addition.dart';
 import 'package:quail_57/shared/ui/pair_first_second.dart';
 
 class HomePageBackgroundPainter extends CustomPainter {
-  final Space Function((int, int)) getSpace;
+  final Tile Function((int, int)) getSpace;
   final Size screen;
   final Animation animation;
 

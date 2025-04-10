@@ -4,33 +4,32 @@ import 'package:quail_57/gameplay/domain/entity/emmy.dart';
 import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/entity/entity.dart';
 import 'package:quail_57/gameplay/domain/move_changes.dart';
-import 'package:quail_57/gameplay/domain/space.dart';
-import 'package:quail_57/gameplay/domain/space_type.dart';
+import 'package:quail_57/gameplay/domain/tile.dart';
+import 'package:quail_57/gameplay/domain/tile_type.dart';
 import 'package:quail_57/shared/data/generate.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 
 class Tree {
-  final Map<Coordinate, Space> map;
+  final Map<Coordinate, Tile> map;
   final int depthOffset;
   final int turns;
+  final Coordinate whereYou;
 
-  Tree({required this.map, required this.depthOffset, required this.turns}) {
-    map.entries.where((entry) => !entry.key.isValid).map((entry) {
-      Coordinate coordinate = entry.key;
-      Space? space = map[coordinate];
-      if (space != null) map[coordinate] = space.withEntity(null);
-      return "";
-    });
+  Tree({
+    required this.map,
+    required this.whereYou,
+    required this.depthOffset,
+    required this.turns,
+  }) {
     int emmyCount = allEmmies().length;
     String report = [
       "",
       "-----------------------",
       "| Thing Count: $thingCount",
       "| Emmy Density: ${(emmyCount / thingCount).toStringAsFixed(2)}",
-      "| You Depth: ${whereYou?.depth}",
-      "| You Length: ${whereYou?.length}",
+      "| You Depth: ${whereYou.depth}",
+      "| You Length: ${whereYou.length}",
       "| Turns So Far: $turns",
       "-----------------------",
       "",
@@ -38,25 +37,30 @@ class Tree {
     log(report);
   }
 
-  bool get youLost => whereYou == null;
-  bool get youWon => this[whereYou].type == SpaceType.goal;
+  bool get youLost => false;
+  bool get youWon => this[whereYou].type == TileType.goal;
   bool get isEndgame => youWon || youLost;
 
   int get thingCount => map.length;
 
-  static Tree initial() {
-    Tree ret = Tree(
-      map: {
-        Generate.coordinate(3, last: BiTri.middle): Generate.space(
-          0,
-        ).withEntity(Emmy.create(EmmyType.all.choice, isYou: true)),
-      },
-      depthOffset: 0,
-      turns: 0,
+  static Tree initial(EmmyType emmyType) {
+    Coordinate coordinate = Generate.coordinate(3, last: BiTri.middle);
+    Tree ret = Tree(map: {}, whereYou: coordinate, depthOffset: 0, turns: 0);
+    ret = ret.setTile(
+      coordinate,
+      ret[coordinate].withEmmy(Emmy.create(emmyType, isYou: true)),
     );
-    ret.removeFloors();
-    // ret = ret.touchAll(ret.root?.outof?.outof, 4);
+    ret = ret.removeFloors();
     return ret;
+  }
+
+  Tree setTile(Coordinate coordinate, Tile tile) {
+    return Tree(
+      map: {...map, coordinate: tile},
+      whereYou: whereYou,
+      depthOffset: depthOffset,
+      turns: turns,
+    );
   }
 
   Tree touchAll(Coordinate? root, int depth) {
@@ -69,40 +73,23 @@ class Tree {
     return ret;
   }
 
-  Space operator [](Coordinate? where) {
+  Tile operator [](Coordinate? where) {
     if (where == null) {
-      return Space(
-        hasFloor: true,
-        entity: null,
-        type: Generate.spaceType(where?.depth ?? 0),
-      );
+      return Tile.empty(where?.depth ?? 0);
     }
-    return map[where] ??= Generate.space(where.depth);
+    return map[where] ??= Generate.tile(where.depth);
   }
 
-  Tree setEntity(Coordinate? where, Entity? entity) {
-    if (where == null) return this;
-    return Tree(
-      map: {
-        ...map,
-        where: (map[where] ?? Generate.space(where.depth)).withEntity(entity),
-        // TODO Space.random, or Space.empty???
-      },
-      depthOffset: depthOffset,
-      turns: turns,
-    );
-  }
-
-  Coordinate? findEntity(Entity? target) {
+  Coordinate? findEmmy(Emmy? target) {
     if (target == null) return null;
     return map.entries
-        .where((entry) => entry.value.entity?.id == target.id)
+        .where((entry) => entry.value.emmy?.id == target.id)
         .firstOrNull
         ?.key;
   }
 
-  Map<Coordinate, Space> _rebaseEntry(
-    MapEntry<Coordinate, Space> entry,
+  Map<Coordinate, Tile> _rebaseEntry(
+    MapEntry<Coordinate, Tile> entry,
     int byDepth,
   ) {
     Coordinate? rebased = entry.key.rebase(byDepth);
@@ -113,58 +100,66 @@ class Tree {
   Tree rebase(int byDepth) {
     return Tree(
       map: {
-        for (MapEntry<Coordinate, Space> entry in map.entries)
+        for (MapEntry<Coordinate, Tile> entry in map.entries)
           ..._rebaseEntry(entry, byDepth),
       },
       depthOffset: depthOffset + byDepth,
       turns: turns,
+      whereYou: whereYou.rebase(byDepth) ?? Coordinate.zero,
     );
   }
 
   int? get rebasableBy {
     Coordinate? whereYou = this.whereYou;
-    if (whereYou == null) return null;
     if (whereYou.length > 20) return 5;
     if (whereYou.length < 5) return -5;
     return null;
   }
 
-  void removeFloors() {
+  Tree removeFloors() {
     Coordinate? whereYou = this.whereYou;
+    Tree ret = this;
     void at(Coordinate? where) {
       if (where == null) return;
-      map[where] = this[where].withoutFloor;
+      ret = ret.setTile(where, ret[where].withoutFloor);
     }
 
-    at(whereYou?.outof);
-    at(whereYou?.outof?.outof);
-    at(whereYou?.outof?.outof?.outof);
-    at(whereYou?.outof?.outof?.outof?.outof);
+    at(whereYou.outof);
+    at(whereYou.outof.outof);
+    at(whereYou.outof.outof.outof);
+    at(whereYou.outof.outof.outof.outof);
+
+    return ret;
   }
 
   void removeEntity(Coordinate where) {
-    Space? space = map[where];
+    Tile? space = map[where];
     if (space == null) return;
-    map[where] = space.withEntity(null);
+    map[where] = space.withEmmy(null);
   }
 
   Iterable<Coordinate> allEmmies({bool includeYou = false}) => map.entries
       .where((entry) {
-        if (!includeYou && entry.value.isYou) return false;
-        return entry.value.isEmmy;
+        if (!includeYou && entry.value.hasYou) return false;
+        return entry.value.hasEmmy;
       })
       .map((entry) => entry.key);
 
-  MapEntry<Coordinate, Space>? get _youEntry =>
-      map.entries.where((e) => e.value.isYou).firstOrNull;
-  Coordinate? get whereYou => _youEntry?.key;
   Emmy? get you {
-    Entity? entity = _youEntry?.value.entity;
-    if (entity is! Emmy || entity.isYou != true) return null;
+    Emmy? entity = this[whereYou].emmy;
+    if (entity == null || !entity.isYou) return null;
     return entity;
   }
 
-  Coordinate? get root => whereYou?.outof;
+  Coordinate? get root => whereYou.outof;
+
+  Coordinate randomStepFrom(Coordinate coordinate) {
+    return [...coordinate.adjacents, coordinate.into, coordinate.outof]
+        .whereType<Coordinate>()
+        .where((step) => isMoveAllowed(coordinate, step))
+        .toList()
+        .choice;
+  }
 
   Tree moveYouTo(Coordinate whereYouGo) {
     // stuff we can iterate on
@@ -172,33 +167,32 @@ class Tree {
       map: {...map},
       depthOffset: depthOffset,
       turns: turns + 1,
+      whereYou: whereYouGo,
     );
     void makeMove(Coordinate? from, Coordinate? to) {
       if (newTree.isMoveAllowed(from, to)) {
-        newTree.map.addAll(newTree.moveChanges(from, to));
+        Map<Coordinate, Tile> changes = newTree.moveChanges(from, to);
+        for (final entry in changes.entries) {
+          newTree = newTree.setTile(entry.key, entry.value);
+        }
       }
     }
 
     // move you
-    newTree.removeFloors();
+    newTree = newTree.removeFloors();
     Coordinate? whereYou = this.whereYou;
     makeMove(whereYou, whereYouGo);
 
     // move emmies
-    for (Coordinate whereEmmy in newTree.allEmmies().toList()) {
-      Coordinate whereEmmyGo = whereEmmy.randomStep;
-      if (!whereEmmy.isValid || !whereEmmyGo.isValid) {
-        newTree.removeEntity(whereEmmy);
-      }
-      makeMove(whereEmmy, whereEmmyGo);
-    }
-
-    if (you?.age == null) newTree = newTree.setEntity(whereYou, null);
+    // for (Coordinate whereEmmy in newTree.allEmmies().toList()) {
+    //   Coordinate whereEmmyGo = randomStepFrom(whereEmmy);
+    //   makeMove(whereEmmy, whereEmmyGo);
+    // }
 
     return newTree;
   }
 
-  Map<Coordinate, Space> moveChanges(Coordinate? from, Coordinate? to) {
+  Map<Coordinate, Tile> moveChanges(Coordinate? from, Coordinate? to) {
     if (from == null || to == null) return {};
     return MoveChanges(this, from, to).asMap;
   }
@@ -208,9 +202,5 @@ class Tree {
     if (from == null || to == null) return false;
     if (from.into == to && this[from].hasFloor) return false;
     return true;
-  }
-
-  Tree setYou(EmmyType type) {
-    return setEntity(whereYou, you?.withEmmyType(type));
   }
 }

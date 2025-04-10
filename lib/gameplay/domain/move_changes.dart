@@ -1,8 +1,7 @@
 import 'package:quail_57/gameplay/domain/entity/emmy.dart';
-import 'package:quail_57/gameplay/domain/entity/entity.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/space.dart';
+import 'package:quail_57/gameplay/domain/tile.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
 
 class MoveChanges {
@@ -12,34 +11,35 @@ class MoveChanges {
 
   MoveChanges(this.tree, this.from, this.to);
 
-  Space get fromSpace => tree[from];
-  Space get toSpace => tree[to];
-  Entity? get mover => fromSpace.entity?.age;
-  Entity? get target => toSpace.entity;
+  Tile get fromTile => tree[from];
+  Tile get toTile => tree[to];
+  Emmy? get mover => fromTile.emmy;
+  Emmy? get targetEmmy => toTile.emmy;
+  Fruit? get targetFruit => toTile.fruit;
 
-  Map<Coordinate, Space> _setFromAndTo(Entity? newFrom, Entity? newTo) {
-    return {from: fromSpace.withEntity(newFrom), to: toSpace.withEntity(newTo)};
+  Map<Coordinate, Tile> _setFromAndTo(Tile newFromTile, Tile newToTile) {
+    return {from: newFromTile, to: newToTile};
   }
 
-  Map<Coordinate, Space> get asMap {
-    Entity? mover = this.mover;
-    if (mover is! Emmy) return {};
-    // so mover is an emmy now.
+  Map<Coordinate, Tile> get asMap {
+    Emmy? mover = this.mover;
+    Emmy? targetEmmy = this.targetEmmy;
+    Fruit? targetFruit = this.targetFruit;
 
-    Entity? target = this.target;
-    switch (target) {
-      case null:
-        return _setFromAndTo(null, mover);
-      case Emmy targetEmmy:
-        return emmyMap(mover, targetEmmy);
-      case Fruit targetFruit:
-        return fruitMap(mover, targetFruit);
-      case _:
-        throw UnimplementedError("Missed Something?");
-    }
+    // edge case
+    if (mover == null) return {};
+
+    // Handle emmy collisions if they exist,
+    if (targetEmmy != null) return emmyMap(mover, targetEmmy);
+
+    // else handle fruit collision,
+    if (targetFruit != null) return fruitMap(mover, targetFruit);
+
+    // else just move.
+    return _setFromAndTo(fromTile.withEmmy(null), toTile.withEmmy(mover));
   }
 
-  Map<Coordinate, Space> emmyMap(Emmy mover, Emmy target) {
+  Map<Coordinate, Tile> emmyMap(Emmy mover, Emmy target) {
     // Outcome outcome = mover.outcomeAgainst(target);
     // return switch(outcome) {
     //   case Outcome.ate => _setFromAndTo(),
@@ -50,9 +50,14 @@ class MoveChanges {
     return {};
   }
 
-  Map<Coordinate, Space> fruitMap(Emmy mover, Fruit target) {
+  Map<Coordinate, Tile> fruitMap(Emmy mover, Fruit target) {
     bool canEat = mover.emmyType.canEatFruit(target.fruitType);
-    if (canEat) return _setFromAndTo(null, mover.eatFruit(from, target));
-    return _setFromAndTo(mover.blocked(to), target);
+    if (canEat) {
+      return _setFromAndTo(
+        fromTile.withEmmy(null),
+        toTile.withEmmy(mover.eatFruit(from, target)).withFruit(null),
+      );
+    }
+    return _setFromAndTo(fromTile.withEmmy(null), toTile.withEmmy(mover));
   }
 }

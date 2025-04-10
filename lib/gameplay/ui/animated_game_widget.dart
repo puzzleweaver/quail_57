@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy.dart';
+import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
 import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/size_is_tall.dart';
 
 class AnimatedGameWidget extends StatefulWidget {
@@ -33,7 +34,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   Size get size => widget.size;
   void Function(Tree) get setTree => widget.setTree;
 
-  Tree fromTree = Tree.initial();
+  Tree fromTree = Tree.initial(EmmyType.all.choice);
   ZoomedViewport fromViewport = ZoomedViewport.initial;
   ZoomedViewport viewportOf(Tree tree) {
     return fromViewport.lerpTo(rawViewportOf(tree), 1 - animation.value);
@@ -127,19 +128,27 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
             .contains(viewportOf(tree).inverseTransform(tap, Size(dim, dim))) ??
         false;
 
-    Coordinate? current = tree.whereYou,
-        left = current?.left,
-        right = current?.right,
-        up = current?.up,
-        down = current?.down;
-    if (current != null && check(current)) {
-      if (current.isMiddle) return moveTo(current.outof);
+    Coordinate? current = tree.whereYou;
+    Iterable<Coordinate> adjacents =
+        [
+          current.right,
+          current.up,
+          current.left,
+          current.down,
+          current.left?.up,
+          current.left?.down,
+          current.right?.up,
+          current.right?.down,
+        ].whereType<Coordinate>();
+    // if you tap the tile you're on, you go up or down
+    if (check(current)) {
+      if (tree[current].hasFloor) return moveTo(current.outof);
       return moveTo(current.into);
     }
-    if (check(left)) return moveTo(left);
-    if (check(right)) return moveTo(right);
-    if (check(down)) return moveTo(down);
-    if (check(up)) return moveTo(up);
+    // if you tap an adjacent tile, you go there
+    for (Coordinate coordinate in adjacents) {
+      if (check(coordinate)) return moveTo(coordinate);
+    }
   }
 
   void moveTo(Coordinate? newYou) {

@@ -1,18 +1,17 @@
 import 'dart:math';
 
 import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
-import 'package:quail_57/gameplay/domain/entity/entity.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/move_type.dart';
 import 'package:quail_57/shared/data/generate.dart';
 
-class Emmy extends Entity {
+class Emmy {
+  final String id;
   final EmmyType emmyType;
   final int health;
   final int belly;
   final MoveType? previousMove;
-  @override
   final bool isYou;
   final int kills;
 
@@ -21,8 +20,7 @@ class Emmy extends Entity {
   int get hungriness => emmyType.hungriness;
 
   Emmy({
-    required super.id,
-    required super.type,
+    required this.id,
     required this.health,
     required this.belly,
     required this.emmyType,
@@ -31,15 +29,9 @@ class Emmy extends Entity {
     required this.kills,
   });
 
-  factory Emmy.create(
-    EmmyType emmyType, {
-    EntityType? type,
-    String? id,
-    bool? isYou,
-  }) {
+  factory Emmy.create(EmmyType emmyType, {bool? isYou}) {
     return Emmy(
-      id: id ?? Generate.id,
-      type: type ?? EntityType.emmy,
+      id: Generate.id,
       emmyType: emmyType,
       health: emmyType.health,
       belly: 100,
@@ -49,21 +41,9 @@ class Emmy extends Entity {
     );
   }
 
-  Emmy withEmmyType(EmmyType newEmmyType) {
-    return Emmy.create(newEmmyType, type: type, id: id, isYou: isYou);
-  }
-
-  @override
-  Emmy? get age {
-    int newBelly = belly - emmyType.hungriness;
-    if (newBelly < 0) return null;
-    return withBelly(newBelly);
-  }
-
   Emmy withBelly(int newBelly) {
     return Emmy(
       id: id,
-      type: type,
       health: health,
       belly: newBelly,
       emmyType: emmyType,

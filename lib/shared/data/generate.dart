@@ -2,13 +2,13 @@ import 'dart:math';
 
 import 'package:quail_57/gameplay/domain/entity/emmy.dart';
 import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
-import 'package:quail_57/gameplay/domain/entity/entity.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/geometry/tri.dart';
-import 'package:quail_57/gameplay/domain/space.dart';
-import 'package:quail_57/gameplay/domain/space_type.dart';
+import 'package:quail_57/gameplay/domain/tile.dart';
+import 'package:quail_57/gameplay/domain/tile_type.dart';
+import 'package:quail_57/shared/ui/double_roll.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/map_range_pick.dart';
 
@@ -26,18 +26,14 @@ class Generate {
     ], 0);
   }
 
-  static bool rollChance(double chance) {
-    return Random().nextDouble() < chance;
-  }
-
-  static SpaceType spaceType(int depth) {
-    if (rollChance(goalChance(depth))) return SpaceType.goal;
-    List<SpaceType> darkLeafZone = [SpaceType.darkLeaf],
-        lightLeafZone = [SpaceType.lightLeaf],
-        barkZone = [SpaceType.bark],
-        softwoodZone = [SpaceType.softwood1, SpaceType.softwood2],
-        hardwoodZone = [SpaceType.hardwood1, SpaceType.hardwood2],
-        dirtZone = [SpaceType.dirt];
+  static TileType spaceType(int depth) {
+    if (goalChance(depth).roll) return TileType.goal;
+    List<TileType> darkLeafZone = [TileType.darkLeaf],
+        lightLeafZone = [TileType.lightLeaf],
+        barkZone = [TileType.bark],
+        softwoodZone = [TileType.softwood1, TileType.softwood2],
+        hardwoodZone = [TileType.hardwood1, TileType.hardwood2],
+        dirtZone = [TileType.dirt];
     return {
       (null, -5): lightLeafZone,
       (-5, -1): lightLeafZone + darkLeafZone,
@@ -53,19 +49,13 @@ class Generate {
     }.rangePick(depth, darkLeafZone).choice;
   }
 
-  static Space space(int depth) {
-    SpaceType type = spaceType(depth);
-    Entity? entity;
-    if (rollChance(emmyChance(depth))) entity = Generate.emmy(type);
-    if (rollChance(logChance(type))) {
-      entity = Fruit(fruitType: FruitType.log, id: Generate.id);
-    }
-    if (rollChance(appleChance(type))) {
-      entity = Fruit(fruitType: FruitType.apple, id: Generate.id);
-    }
-    return Space(
-      entity: entity,
-      hasFloor: Random().nextDouble() < 0.5,
+  static Tile tile(int depth) {
+    TileType type = spaceType(depth);
+    bool hasFloor = 0.5.roll;
+    return Tile(
+      emmy: emmy(type),
+      fruit: hasFloor ? fruit(type) : null,
+      hasFloor: hasFloor,
       type: type,
     );
   }
@@ -75,70 +65,45 @@ class Generate {
     return 0.1;
   }
 
-  static double appleChance(SpaceType type) {
-    return switch (type) {
-      SpaceType.softwood1 => 0.1,
-      SpaceType.softwood2 => 0.15,
-      SpaceType.hardwood1 => 0.01,
-      SpaceType.hardwood2 => 0.01,
-      SpaceType.darkLeaf => 0.3,
-      SpaceType.lightLeaf => 0.25,
-      SpaceType.bark => 0.0,
-      SpaceType.dirt => 0.0,
-      SpaceType.goal => 0.0,
-    };
-  }
-
-  static double logChance(SpaceType type) {
-    return switch (type) {
-      SpaceType.softwood1 => 0.2,
-      SpaceType.softwood2 => 0.2,
-      SpaceType.hardwood1 => 0.3,
-      SpaceType.hardwood2 => 0.3,
-      SpaceType.darkLeaf => 0.05,
-      SpaceType.lightLeaf => 0.0,
-      SpaceType.bark => 0.1,
-      SpaceType.dirt => 0.1,
-      SpaceType.goal => 0.0,
-    };
-  }
-
   static double goalChance(int depth) {
     if (depth > 30) return 0.05;
     if (depth > 40) return 0.2;
     return 0.0;
   }
 
-  static Fruit fruit(int depth) {
-    return Fruit(fruitType: FruitType.all.choice, id: Generate.id);
+  static Fruit? fruit(TileType type) {
+    if (type.logChance.roll) return Fruit.log;
+    if (type.appleChance.roll) return Fruit.apple;
+    return null;
   }
 
-  static Emmy? emmy(SpaceType type) {
+  static Emmy? emmy(TileType type) {
+    if (0.9.roll) return null;
     EmmyType? emmyType = Generate.emmyType(type);
     if (emmyType == null) return null;
     return Emmy.create(emmyType);
   }
 
-  static EmmyType? emmyType(SpaceType type) {
+  static EmmyType? emmyType(TileType type) {
     // ignore: prefer_function_declarations_over_variables
     switch (type) {
-      case SpaceType.lightLeaf:
+      case TileType.lightLeaf:
         return EmmyType.wasp;
-      case SpaceType.bark:
-      case SpaceType.darkLeaf:
+      case TileType.bark:
+      case TileType.darkLeaf:
         return [
           EmmyType.termite,
           EmmyType.ant,
           EmmyType.antLarva,
           EmmyType.antLarva,
         ].choice;
-      case SpaceType.hardwood2:
-      case SpaceType.softwood2:
+      case TileType.hardwood2:
+      case TileType.softwood2:
         return [EmmyType.ant, EmmyType.termite].choice;
-      case SpaceType.softwood1:
-      case SpaceType.hardwood1:
+      case TileType.softwood1:
+      case TileType.hardwood1:
         return [EmmyType.ant, EmmyType.bigTermite].choice;
-      case SpaceType.dirt:
+      case TileType.dirt:
         return [
           EmmyType.grub,
           EmmyType.wasp,
@@ -146,7 +111,7 @@ class Generate {
           EmmyType.bigTermite,
           EmmyType.antQueen,
         ].choice;
-      case SpaceType.goal:
+      case TileType.goal:
         return null;
     }
   }

@@ -1,5 +1,4 @@
 // a coordinate that uniquely identifies a square on any level.
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
@@ -15,7 +14,7 @@ class Coordinate {
 
   static Coordinate get zero => Coordinate([], 0);
   Coordinate get into => Coordinate([...sequence, BiTri.middle], depthOffset);
-  Coordinate? get outof => Coordinate(withoutLast, depthOffset);
+  Coordinate get outof => Coordinate(withoutLast, depthOffset);
   Coordinate? get left => replaceLast(last?.left);
   Coordinate? get down => replaceLast(last?.down);
   Coordinate? get up => replaceLast(last?.up);
@@ -41,11 +40,6 @@ class Coordinate {
     ], depthOffset + byDepth);
   }
 
-  bool get isValid {
-    if (withoutLast.contains(BiTri.middle)) return false;
-    return true;
-  }
-
   Coordinate? withOffset(BiTri? offset) {
     if (offset == null) return this;
     List<Tri> as = sequence.map((bt) => bt.a).toList();
@@ -58,25 +52,10 @@ class Coordinate {
     ], depthOffset);
   }
 
-  Coordinate get randomStep {
-    List<Coordinate> choices =
-        [
-          left,
-          down,
-          up,
-          right,
-          if (!isMiddle) into,
-          if (isMiddle) outof,
-        ].whereType<Coordinate>().toList();
-    return choices[Random().nextInt(choices.length)];
-  }
-
   List<BiTri> get withoutLast {
     if (sequence.isEmpty || sequence.length == 1) return [];
     return sequence.sublist(0, sequence.length - 1);
   }
-
-  bool get isMiddle => last?.isMiddle ?? false;
 
   List<Coordinate> get next =>
       BiTri.all()
@@ -108,6 +87,20 @@ class Coordinate {
       ret = narrow(bt, ret);
     }
     return ret;
+  }
+
+  Iterable<Coordinate> get adjacents {
+    return [
+      up,
+      left,
+      right,
+      down,
+      up?.left,
+      up?.right,
+      down?.left,
+      down?.right,
+      // TODO does this include into/outof? for now no.
+    ].whereType<Coordinate>();
   }
 
   @override

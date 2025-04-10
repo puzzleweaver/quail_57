@@ -7,10 +7,8 @@ import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/move_type.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/gameplay/domain/entity/emmy.dart';
-import 'package:quail_57/gameplay/domain/entity/entity.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
-import 'package:quail_57/gameplay/domain/space.dart';
-import 'package:quail_57/gameplay/domain/space_type.dart';
+import 'package:quail_57/gameplay/domain/tile_type.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
 import 'package:quail_57/shared/ui/rect_lerp.dart';
 
@@ -44,54 +42,72 @@ class GameplayRenderer {
     );
   }
 
-  void Function() drawTree({
+  TileRenderer drawTree({
     required Tree previousTree,
     required Tree tree,
-    required Coordinate? root,
+    required Coordinate? coordinate,
     int? depthLeft,
+    bool first = true,
   }) {
     depthLeft ??= renderDepth;
     // if (initialCall) {
     //   drawSpace();
     // }
-    if (root == null) return () {};
+    if (coordinate == null) return TileRenderer();
     if (depthLeft > 0) {
-      List<void Function()> drawEntities = [];
+      List<TileRenderer> tilesToRender = [];
       for (BiTri bt in BiTri.all(allowMiddle: true)) {
-        bool isLeaf = tree[root].hasFloor || root.isMiddle == true;
+        bool isLeaf = tree[coordinate].hasFloor == true;
         int nextDepth = isLeaf ? 0 : depthLeft - 1;
-        Coordinate? nextRoot = root.into.replaceLast(bt);
-        void Function() drawEntity = drawTree(
-          previousTree: previousTree,
-          tree: tree,
-          root: nextRoot,
-          depthLeft: nextDepth,
+        Coordinate? nextCoordinate = coordinate.into.replaceLast(bt);
+        tilesToRender.add(
+          drawTree(
+            previousTree: previousTree,
+            tree: tree,
+            coordinate: nextCoordinate,
+            depthLeft: nextDepth,
+            first: false,
+          ),
         );
-        drawEntities.add(drawEntity);
       }
-      drawEntities.map((f) => f()).toList();
+      tilesToRender.shuffle();
+      for (var ttr in tilesToRender) {
+        ttr.drawTile?.call();
+      }
+      for (var ttr in tilesToRender) {
+        ttr.drawFruit?.call();
+      }
+      for (var ttr in tilesToRender) {
+        ttr.drawEmmy?.call();
+      }
     }
 
-    drawSpace(root, tree[root], _rectFromCoord(root));
-    return () => drawEntity(
-      where: root,
-      fromTree: previousTree,
-      entity: tree[root].entity,
+    Rect rect = _rectFromCoord(coordinate);
+
+    TileRenderer ret = TileRenderer(
+      drawEmmy: () => drawEmmy(tree[coordinate].emmy, rect, previousTree),
+      drawFruit: () => drawFruit(tree[coordinate].fruit, rect),
+      drawTile: () => drawTile(tree, coordinate, rect),
     );
+    if (first) ret.drawAll();
+    return ret;
   }
 
-  void drawSpace(Coordinate where, Space space, Rect rect) {
-    // draw floor
+  void drawTile(Tree tree, Coordinate where, Rect rect) {
+    if (tree.whereYou == where) drawRect(rect);
 
+    // shadow (on the things underneath)
     drawShadowPane(rect, where.depth);
-    drawFloor(rect, where.isMiddle || space.hasFloor, space.type);
+
+    // floor
+    drawFloor(rect, tree[where].hasFloor, tree[where].type);
   }
 
-  void drawFloor(Rect rect, bool hole, SpaceType type) =>
+  void drawFloor(Rect rect, bool hole, TileType type) =>
       hole ? drawWall(rect, type) : drawFrame(rect, type);
 
-  void drawWall(Rect rect, SpaceType type) => drawImageRect(type.image, rect);
-  void drawFrame(Rect rect, SpaceType type) =>
+  void drawWall(Rect rect, TileType type) => drawImageRect(type.image, rect);
+  void drawFrame(Rect rect, TileType type) =>
       drawMaskedImage(type.image, type.mask, rect);
   void drawShadowPane(Rect rect, int depth) {
     // this will be the "usual" alpha value, when not fading in or out
@@ -111,6 +127,16 @@ class GameplayRenderer {
     );
   }
 
+  void drawRect(Rect rect) {
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..color = Colors.red
+        ..strokeWidth = 3
+        ..style = PaintingStyle.stroke,
+    );
+  }
+
   Color _paneColor(int depth) {
     Color sky = Colors.white;
     Color tree = Colors.black;
@@ -122,28 +148,12 @@ class GameplayRenderer {
     // return sky;
   }
 
-  void drawEntity({
-    required Coordinate where,
-    required Tree fromTree,
-    required Entity? entity,
-  }) {
-    if (entity == null) return;
-    Rect rect = _rectFromCoord(where);
-
-    Entity? previousEntity = fromTree[where].entity;
-    if (previousEntity?.isFruit == true && !animation.isCompleted) {
-      drawFruit(previousEntity as Fruit, rect);
-    }
-
-    if (entity is Emmy) drawEmmy(entity, rect, fromTree);
-    if (entity is Fruit) drawFruit(entity, rect);
-  }
-
-  void drawEmmy(Emmy emmy, Rect rect, Tree fromTree) {
+  void drawEmmy(Emmy? emmy, Rect rect, Tree fromTree) {
+    if (emmy == null) return;
     MoveType? moveType = emmy.previousMove;
 
     Rect toRect = rect;
-    Coordinate? from = fromTree.findEntity(emmy);
+    Coordinate? from = fromTree.findEmmy(emmy);
     if (from != null) {
       Rect fromRect = _rectFromCoord(from);
       rect = fromRect.lerpTo(toRect, animation.value);
@@ -174,7 +184,8 @@ class GameplayRenderer {
     }
   }
 
-  void drawFruit(Fruit fruit, Rect rect) {
+  void drawFruit(Fruit? fruit, Rect rect) {
+    if (fruit == null) return;
     drawImageRect(fruit.fruitType.image, rect);
   }
 
@@ -256,4 +267,18 @@ class GameplayRenderer {
     coordinate.rect(unit: Rect.fromLTWH(0, 0, 1, 1)),
     size,
   );
+}
+
+class TileRenderer {
+  final void Function()? drawFruit;
+  final void Function()? drawEmmy;
+  final void Function()? drawTile;
+
+  TileRenderer({this.drawFruit, this.drawEmmy, this.drawTile});
+
+  void drawAll() {
+    drawTile?.call();
+    drawFruit?.call();
+    drawEmmy?.call();
+  }
 }

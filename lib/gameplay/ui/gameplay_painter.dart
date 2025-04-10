@@ -46,11 +46,11 @@ class GameplayPainter extends CustomPainter {
     renderer.drawDepthOverlay(root?.depth);
 
     void treeFrom(Coordinate? root) {
-      renderer.drawTree(previousTree: fromTree, tree: tree, root: root);
+      renderer.drawTree(previousTree: fromTree, tree: tree, coordinate: root);
     }
 
-    bool movedInto = tree.whereYou == fromTree.whereYou?.into;
-    bool movedOutof = tree.whereYou == fromTree.whereYou?.outof;
+    bool movedInto = tree.whereYou == fromTree.whereYou.into;
+    bool movedOutof = tree.whereYou == fromTree.whereYou.outof;
     if (!animation.isCompleted) {
       if (movedInto) root = root?.outof;
       if (movedOutof) root = root;

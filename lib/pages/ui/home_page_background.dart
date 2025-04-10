@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:quail_57/gameplay/domain/space.dart';
+import 'package:quail_57/gameplay/domain/tile.dart';
 import 'package:quail_57/pages/ui/home_page_background_painter.dart';
 import 'package:quail_57/shared/data/generate.dart';
 import 'package:quail_57/shared/ui/pair_first_second.dart';
@@ -14,7 +14,7 @@ class HomePageBackground extends StatefulWidget {
 
 class HomePageBackgroundState extends State<HomePageBackground>
     implements TickerProvider {
-  Map<int, Map<int, Space>> background = {};
+  Map<int, Map<int, Tile>> background = {};
 
   late Animation<double> animation;
   late AnimationController controller;
@@ -38,8 +38,8 @@ class HomePageBackgroundState extends State<HomePageBackground>
     controller.repeat();
   }
 
-  Space getSpace((int, int) where) {
-    return (background[where.x] ??= {})[where.y] ??= Generate.space(where.y);
+  Tile getSpace((int, int) where) {
+    return (background[where.x] ??= {})[where.y] ??= Generate.tile(where.y);
   }
 
   @override
