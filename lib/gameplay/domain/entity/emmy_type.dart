@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
-import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/data/sprites.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 
@@ -129,10 +129,13 @@ extension EmmyTypeTables on EmmyType {
         false,
         "i don't think you can unlock her at all right now actually !",
       ),
-      EmmyType.wasp => (Settings.gamesWon > 0, "beat the game."),
+      EmmyType.wasp => (PersistedInt.gamesWon.value > 0, "beat the game."),
       EmmyType.termite => (true, "unlocked by default."),
-      EmmyType.bigTermite => (Settings.gamesWon > 0, "beat the game."),
-      EmmyType.grub => (Settings.gamesPlayed >= 3, "play 3 rounds."),
+      EmmyType.bigTermite => (
+        PersistedInt.gamesWon.value > 0,
+        "beat the game.",
+      ),
+      EmmyType.grub => (PersistedInt.gamesPlayed.value >= 3, "play 3 rounds."),
     };
   }
 }

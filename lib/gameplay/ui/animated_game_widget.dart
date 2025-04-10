@@ -7,7 +7,7 @@ import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
-import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/size_is_tall.dart';
 
@@ -70,7 +70,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
 
   initAnimation() {
     controller = AnimationController(
-      duration: Duration(milliseconds: Settings.animationSpeed),
+      duration: Duration(milliseconds: PersistedInt.animationSpeed.value),
       vsync: this,
     );
     animation = Tween<double>(begin: 0, end: 1).animate(controller)

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
 import 'package:quail_57/gameplay/ui/gameplay_page.dart';
 import 'package:quail_57/select_bug/ui/bug_pane.dart';
-import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/ui/go_to.dart';
 import 'package:quail_57/shared/ui/pair_first_second.dart';
 
@@ -16,7 +16,7 @@ class BugInfoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void play() {
-      SettingField.gamesPlayed.setValue(Settings.gamesPlayed + 1);
+      PersistedInt.gamesPlayed.value++;
       Navigator.of(context).pop();
       goTo(context, (context) => GameplayPage(initialBug: type), replace: true);
     }

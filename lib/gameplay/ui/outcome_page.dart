@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/settings/ui/page_title.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
 
@@ -23,13 +23,16 @@ class OutcomePage extends StatefulWidget {
 class OutcomePageState extends State<OutcomePage> {
   @override
   void initState() {
-    if (!widget.youWon) SettingField.gamesLost.setValue(Settings.gamesLost + 1);
-    if (widget.youWon) SettingField.gamesWon.setValue(Settings.gamesWon + 1);
-    if (widget.turnsSurvived > Settings.maxTurnsSurvived) {
-      SettingField.maxTurnsSurvived.setValue(widget.turnsSurvived);
+    // update statistics
+    if (!widget.youWon) PersistedInt.gamesLost.value++;
+    if (widget.youWon) PersistedInt.gamesWon.value++;
+
+    if (widget.turnsSurvived > PersistedInt.maxTurnsSurvived.value) {
+      PersistedInt.maxTurnsSurvived.value = widget.turnsSurvived;
     }
-    if (widget.kills > Settings.maxKills) {
-      SettingField.maxKills.setValue(widget.kills);
+
+    if (widget.kills > PersistedInt.maxKills.value) {
+      PersistedInt.maxKills.value = widget.kills;
     }
     super.initState();
   }

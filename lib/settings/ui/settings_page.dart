@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/settings/ui/page_title.dart';
 import 'package:quail_57/settings/ui/setting_widget.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
@@ -15,7 +15,7 @@ class SettingsPage extends StatelessWidget {
           child: TitledPage(
             title: "Settings",
             children: [
-              SettingWidget(field: SettingField.animationSpeed),
+              SettingWidget(field: PersistedInt.animationSpeed),
               // SettingWidget(field: SettingField.animationSpeed),
               // status(SettingField.maxKills, Settings.maxKills),
               // status(SettingField.gamesLost, Settings.gamesLost),
@@ -29,7 +29,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget status(SettingField field, dynamic value) {
+  Widget status(PersistedInt field, dynamic value) {
     return Text(
       "${field.title}: $value",
       style: TextStyle(color: Colors.white),

@@ -22,7 +22,7 @@ class Tree {
     required this.depthOffset,
     required this.turns,
   }) {
-    int emmyCount = allEmmies().length;
+    int emmyCount = whereEmmies().length;
     String report = [
       "",
       "-----------------------",
@@ -132,13 +132,7 @@ class Tree {
     return ret;
   }
 
-  void removeEntity(Coordinate where) {
-    Tile? space = map[where];
-    if (space == null) return;
-    map[where] = space.withEmmy(null);
-  }
-
-  Iterable<Coordinate> allEmmies({bool includeYou = false}) => map.entries
+  Iterable<Coordinate> whereEmmies({bool includeYou = false}) => map.entries
       .where((entry) {
         if (!includeYou && entry.value.hasYou) return false;
         return entry.value.hasEmmy;

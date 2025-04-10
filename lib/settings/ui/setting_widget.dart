@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/settings/domain/setting.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/ui/pair_first_second.dart';
 
-class SettingWidget<T> extends StatefulWidget {
-  final SettingField<T> field;
+class SettingWidget extends StatefulWidget {
+  final PersistedInt field;
   const SettingWidget({super.key, required this.field});
 
   @override
   State<StatefulWidget> createState() => SettingWidgetState();
 }
 
-class SettingWidgetState<T> extends State<SettingWidget<T>> {
-  SettingField<T> get field => widget.field;
+class SettingWidgetState extends State<SettingWidget> {
+  PersistedInt get field => widget.field;
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +41,11 @@ class SettingWidgetState<T> extends State<SettingWidget<T>> {
 
   Widget optionButton(BuildContext context, dynamic value, String optionTitle) {
     void onPressed() {
-      field.setValue(value);
+      field.value = value;
       setState(() {});
     }
 
-    bool isSelected = field.isValue(value);
+    bool isSelected = field.value == value;
 
     final scheme = Theme.of(context).buttonTheme.colorScheme;
     Color? buttonBackground = scheme?.onPrimary.withAlpha(150);
