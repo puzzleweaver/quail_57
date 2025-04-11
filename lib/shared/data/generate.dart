@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:quail_57/gameplay/domain/entity/emmy.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
@@ -53,14 +53,14 @@ class Generate {
     TileType type = spaceType(depth);
     bool hasFloor = 0.5.roll;
     return Tile(
-      emmy: emmy(type),
+      bug: bug(type),
       fruit: hasFloor ? fruit(type) : null,
       hasFloor: hasFloor,
       type: type,
     );
   }
 
-  static double emmyChance(int depth) {
+  static double bugChance(int depth) {
     if (depth < -15) return 0.2;
     return 0.1;
   }
@@ -77,39 +77,39 @@ class Generate {
     return null;
   }
 
-  static Emmy? emmy(TileType type) {
+  static Bug? bug(TileType type) {
     if (0.9.roll) return null;
-    EmmyType? emmyType = Generate.emmyType(type);
-    if (emmyType == null) return null;
-    return Emmy.create(emmyType);
+    BugType? bugType = Generate.bugType(type);
+    if (bugType == null) return null;
+    return Bug.create(bugType);
   }
 
-  static EmmyType? emmyType(TileType type) {
+  static BugType? bugType(TileType type) {
     // ignore: prefer_function_declarations_over_variables
     switch (type) {
       case TileType.lightLeaf:
-        return EmmyType.wasp;
+        return BugType.wasp;
       case TileType.bark:
       case TileType.darkLeaf:
         return [
-          EmmyType.termite,
-          EmmyType.ant,
-          EmmyType.antLarva,
-          EmmyType.antLarva,
+          BugType.termite,
+          BugType.ant,
+          BugType.antLarva,
+          BugType.antLarva,
         ].choice;
       case TileType.hardwood2:
       case TileType.softwood2:
-        return [EmmyType.ant, EmmyType.termite].choice;
+        return [BugType.ant, BugType.termite].choice;
       case TileType.softwood1:
       case TileType.hardwood1:
-        return [EmmyType.ant, EmmyType.bigTermite].choice;
+        return [BugType.ant, BugType.bigTermite].choice;
       case TileType.dirt:
         return [
-          EmmyType.grub,
-          EmmyType.wasp,
-          EmmyType.termite,
-          EmmyType.bigTermite,
-          EmmyType.antQueen,
+          BugType.grub,
+          BugType.wasp,
+          BugType.termite,
+          BugType.bigTermite,
+          BugType.antQueen,
         ].choice;
       case TileType.goal:
         return null;

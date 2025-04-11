@@ -6,7 +6,7 @@ import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/move_type.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy.dart';
+import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/tile_type.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
@@ -78,14 +78,14 @@ class GameplayRenderer {
         ttr.drawFruit?.call();
       }
       for (var ttr in tilesToRender) {
-        ttr.drawEmmy?.call();
+        ttr.drawBug?.call();
       }
     }
 
     Rect rect = _rectFromCoord(coordinate);
 
     TileRenderer ret = TileRenderer(
-      drawEmmy: () => drawEmmy(tree[coordinate].emmy, rect, previousTree),
+      drawBug: () => drawBug(tree[coordinate].bug, rect, previousTree),
       drawFruit: () => drawFruit(tree[coordinate].fruit, rect),
       drawTile: () => drawTile(tree, coordinate, rect),
     );
@@ -148,12 +148,12 @@ class GameplayRenderer {
     // return sky;
   }
 
-  void drawEmmy(Emmy? emmy, Rect rect, Tree fromTree) {
-    if (emmy == null) return;
-    MoveType? moveType = emmy.previousMove;
+  void drawBug(Bug? bug, Rect rect, Tree fromTree) {
+    if (bug == null) return;
+    MoveType? moveType = bug.previousMove;
 
     Rect toRect = rect;
-    Coordinate? from = fromTree.findEmmy(emmy);
+    Coordinate? from = fromTree.findBug(bug);
     if (from != null) {
       Rect fromRect = _rectFromCoord(from);
       rect = fromRect.lerpTo(toRect, animation.value);
@@ -162,7 +162,7 @@ class GameplayRenderer {
     switch (moveType) {
       case MoveType.none:
       case null:
-        drawImageRect(emmy.emmyType.frame(idleValue), rect);
+        drawImageRect(bug.bugType.frame(idleValue), rect);
       case MoveType.blocked:
         // TODO: Handle this case.
         throw UnimplementedError();
@@ -271,14 +271,14 @@ class GameplayRenderer {
 
 class TileRenderer {
   final void Function()? drawFruit;
-  final void Function()? drawEmmy;
+  final void Function()? drawBug;
   final void Function()? drawTile;
 
-  TileRenderer({this.drawFruit, this.drawEmmy, this.drawTile});
+  TileRenderer({this.drawFruit, this.drawBug, this.drawTile});
 
   void drawAll() {
     drawTile?.call();
     drawFruit?.call();
-    drawEmmy?.call();
+    drawBug?.call();
   }
 }

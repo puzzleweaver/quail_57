@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/ui/animated_game_widget.dart';
 import 'package:quail_57/gameplay/domain/tree.dart';
 import 'package:quail_57/gameplay/ui/outcome_page.dart';
@@ -9,7 +9,7 @@ import 'package:quail_57/home/ui/are_you_sure_dialog.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
 
 class GameplayPage extends StatefulWidget {
-  final EmmyType initialBug;
+  final BugType initialBug;
 
   const GameplayPage({super.key, required this.initialBug});
 
@@ -21,7 +21,7 @@ class GameplayPageState extends State<GameplayPage> {
   late Tree previous;
   late Tree tree;
 
-  EmmyType get initialBug => widget.initialBug;
+  BugType get initialBug => widget.initialBug;
 
   @override
   void initState() {

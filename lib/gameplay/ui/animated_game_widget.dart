@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
@@ -34,7 +34,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   Size get size => widget.size;
   void Function(Tree) get setTree => widget.setTree;
 
-  Tree fromTree = Tree.initial(EmmyType.all.choice);
+  Tree fromTree = Tree.initial(BugType.all.choice);
   ZoomedViewport fromViewport = ZoomedViewport.initial;
   ZoomedViewport viewportOf(Tree tree) {
     return fromViewport.lerpTo(rawViewportOf(tree), 1 - animation.value);

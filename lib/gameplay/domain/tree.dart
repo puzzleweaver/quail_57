@@ -1,7 +1,7 @@
 import 'dart:developer';
 
-import 'package:quail_57/gameplay/domain/entity/emmy.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/move_changes.dart';
@@ -22,12 +22,12 @@ class Tree {
     required this.depthOffset,
     required this.turns,
   }) {
-    int emmyCount = whereEmmies().length;
+    int bugCount = whereEmmies().length;
     String report = [
       "",
       "-----------------------",
       "| Thing Count: $thingCount",
-      "| Emmy Density: ${(emmyCount / thingCount).toStringAsFixed(2)}",
+      "| Bug Density: ${(bugCount / thingCount).toStringAsFixed(2)}",
       "| You Depth: ${whereYou.depth}",
       "| You Length: ${whereYou.length}",
       "| Turns So Far: $turns",
@@ -43,12 +43,12 @@ class Tree {
 
   int get thingCount => map.length;
 
-  static Tree initial(EmmyType emmyType) {
+  static Tree initial(BugType bugType) {
     Coordinate coordinate = Generate.coordinate(3, last: BiTri.middle);
     Tree ret = Tree(map: {}, whereYou: coordinate, depthOffset: 0, turns: 0);
     ret = ret.setTile(
       coordinate,
-      ret[coordinate].withEmmy(Emmy.create(emmyType, isYou: true)),
+      ret[coordinate].withBug(Bug.create(bugType, isYou: true)),
     );
     ret = ret.removeFloors();
     return ret;
@@ -80,10 +80,10 @@ class Tree {
     return map[where] ??= Generate.tile(where.depth);
   }
 
-  Coordinate? findEmmy(Emmy? target) {
+  Coordinate? findBug(Bug? target) {
     if (target == null) return null;
     return map.entries
-        .where((entry) => entry.value.emmy?.id == target.id)
+        .where((entry) => entry.value.bug?.id == target.id)
         .firstOrNull
         ?.key;
   }
@@ -135,12 +135,12 @@ class Tree {
   Iterable<Coordinate> whereEmmies({bool includeYou = false}) => map.entries
       .where((entry) {
         if (!includeYou && entry.value.hasYou) return false;
-        return entry.value.hasEmmy;
+        return entry.value.hasBug;
       })
       .map((entry) => entry.key);
 
-  Emmy? get you {
-    Emmy? entity = this[whereYou].emmy;
+  Bug? get you {
+    Bug? entity = this[whereYou].bug;
     if (entity == null || !entity.isYou) return null;
     return entity;
   }
@@ -178,9 +178,9 @@ class Tree {
     makeMove(whereYou, whereYouGo);
 
     // move emmies
-    // for (Coordinate whereEmmy in newTree.allEmmies().toList()) {
-    //   Coordinate whereEmmyGo = randomStepFrom(whereEmmy);
-    //   makeMove(whereEmmy, whereEmmyGo);
+    // for (Coordinate whereBug in newTree.allEmmies().toList()) {
+    //   Coordinate whereBugGo = randomStepFrom(whereBug);
+    //   makeMove(whereBug, whereBugGo);
     // }
 
     return newTree;

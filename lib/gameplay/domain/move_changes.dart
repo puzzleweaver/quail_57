@@ -1,4 +1,4 @@
-import 'package:quail_57/gameplay/domain/entity/emmy.dart';
+import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/tile.dart';
@@ -13,8 +13,8 @@ class MoveChanges {
 
   Tile get fromTile => tree[from];
   Tile get toTile => tree[to];
-  Emmy? get mover => fromTile.emmy;
-  Emmy? get targetEmmy => toTile.emmy;
+  Bug? get mover => fromTile.bug;
+  Bug? get targetBug => toTile.bug;
   Fruit? get targetFruit => toTile.fruit;
 
   Map<Coordinate, Tile> _setFromAndTo(Tile newFromTile, Tile newToTile) {
@@ -22,24 +22,24 @@ class MoveChanges {
   }
 
   Map<Coordinate, Tile> get asMap {
-    Emmy? mover = this.mover;
-    Emmy? targetEmmy = this.targetEmmy;
+    Bug? mover = this.mover;
+    Bug? targetBug = this.targetBug;
     Fruit? targetFruit = this.targetFruit;
 
     // edge case
     if (mover == null) return {};
 
-    // Handle emmy collisions if they exist,
-    if (targetEmmy != null) return emmyMap(mover, targetEmmy);
+    // Handle bug collisions if they exist,
+    if (targetBug != null) return bugMap(mover, targetBug);
 
     // else handle fruit collision,
     if (targetFruit != null) return fruitMap(mover, targetFruit);
 
     // else just move.
-    return _setFromAndTo(fromTile.withEmmy(null), toTile.withEmmy(mover));
+    return _setFromAndTo(fromTile.withBug(null), toTile.withBug(mover));
   }
 
-  Map<Coordinate, Tile> emmyMap(Emmy mover, Emmy target) {
+  Map<Coordinate, Tile> bugMap(Bug mover, Bug target) {
     // Outcome outcome = mover.outcomeAgainst(target);
     // return switch(outcome) {
     //   case Outcome.ate => _setFromAndTo(),
@@ -50,14 +50,14 @@ class MoveChanges {
     return {};
   }
 
-  Map<Coordinate, Tile> fruitMap(Emmy mover, Fruit target) {
-    bool canEat = mover.emmyType.canEatFruit(target.fruitType);
+  Map<Coordinate, Tile> fruitMap(Bug mover, Fruit target) {
+    bool canEat = mover.bugType.canEatFruit(target.fruitType);
     if (canEat) {
       return _setFromAndTo(
-        fromTile.withEmmy(null),
-        toTile.withEmmy(mover.eatFruit(from, target)).withFruit(null),
+        fromTile.withBug(null),
+        toTile.withBug(mover.eatFruit(from, target)).withFruit(null),
       );
     }
-    return _setFromAndTo(fromTile.withEmmy(null), toTile.withEmmy(mover));
+    return _setFromAndTo(fromTile.withBug(null), toTile.withBug(mover));
   }
 }

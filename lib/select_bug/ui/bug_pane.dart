@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/shared/ui/pane/pane.dart';
 import 'package:quail_57/shared/data/sprites.dart';
 
 class BugPane extends StatefulWidget {
-  final EmmyType type;
+  final BugType type;
   final int? perScreen;
 
   const BugPane({super.key, required this.type, this.perScreen});
@@ -17,7 +17,7 @@ class BugPane extends StatefulWidget {
 }
 
 class BugPaneState extends State<BugPane> {
-  EmmyType get type => widget.type;
+  BugType get type => widget.type;
 
   late Timer timer;
   int idleValue = 0;

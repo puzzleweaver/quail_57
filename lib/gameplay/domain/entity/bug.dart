@@ -1,39 +1,39 @@
 import 'dart:math';
 
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/move_type.dart';
 import 'package:quail_57/shared/data/generate.dart';
 
-class Emmy {
+class Bug {
   final String id;
-  final EmmyType emmyType;
+  final BugType bugType;
   final int health;
   final int belly;
   final MoveType? previousMove;
   final bool isYou;
   final int kills;
 
-  int get attack => emmyType.attack;
-  int get baseHealth => emmyType.health;
-  int get hungriness => emmyType.hungriness;
+  int get attack => bugType.attack;
+  int get baseHealth => bugType.health;
+  int get hungriness => bugType.hungriness;
 
-  Emmy({
+  Bug({
     required this.id,
     required this.health,
     required this.belly,
-    required this.emmyType,
+    required this.bugType,
     required this.previousMove,
     required this.isYou,
     required this.kills,
   });
 
-  factory Emmy.create(EmmyType emmyType, {bool? isYou}) {
-    return Emmy(
+  factory Bug.create(BugType bugType, {bool? isYou}) {
+    return Bug(
       id: Generate.id,
-      emmyType: emmyType,
-      health: emmyType.health,
+      bugType: bugType,
+      health: bugType.health,
       belly: 100,
       previousMove: null,
       isYou: isYou ?? false,
@@ -41,21 +41,20 @@ class Emmy {
     );
   }
 
-  Emmy withBelly(int newBelly) {
-    return Emmy(
+  Bug withBelly(int newBelly) {
+    return Bug(
       id: id,
       health: health,
       belly: newBelly,
-      emmyType: emmyType,
+      bugType: bugType,
       previousMove: previousMove,
       isYou: isYou,
       kills: kills,
     );
   }
 
-  Emmy blocked(Coordinate to) => this;
-  Emmy eatFruit(Coordinate from, Fruit fruit) =>
-      withBelly(min(belly + 50, 100));
+  Bug blocked(Coordinate to) => this;
+  Bug eatFruit(Coordinate from, Fruit fruit) => withBelly(min(belly + 50, 100));
 
   bool get isInDanger {
     return belly < 20 || health < baseHealth / 4;

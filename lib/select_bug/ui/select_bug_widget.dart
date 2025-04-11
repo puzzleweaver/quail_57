@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/select_bug/ui/bug_pane.dart';
 import 'package:quail_57/shared/ui/pane/pane.dart';
 import 'package:quail_57/shared/ui/pane/pane_button.dart';
 import 'package:quail_57/statistics/ui/infinite_list_view.dart';
 
 class SelectBugWidget extends StatefulWidget {
-  final EmmyType type;
-  final List<EmmyType> allTypes;
-  final void Function(EmmyType newType) setType;
+  final BugType type;
+  final List<BugType> allTypes;
+  final void Function(BugType newType) setType;
 
   const SelectBugWidget({
     super.key,
@@ -22,9 +22,9 @@ class SelectBugWidget extends StatefulWidget {
 }
 
 class SelectBugWidgetState extends State<SelectBugWidget> {
-  List<EmmyType> get allTypes => widget.allTypes;
-  EmmyType get type => widget.type;
-  void Function(EmmyType) get setType => widget.setType;
+  List<BugType> get allTypes => widget.allTypes;
+  BugType get type => widget.type;
+  void Function(BugType) get setType => widget.setType;
 
   double speed = 0;
 
@@ -37,7 +37,7 @@ class SelectBugWidgetState extends State<SelectBugWidget> {
       onIndex: (index) => setType(allTypes[index]),
       height: dimension,
       children: [
-        for (EmmyType bugType in allTypes)
+        for (BugType bugType in allTypes)
           PaneButton(
             onPressed: () {},
             child: BugPane(type: bugType, perScreen: 3),

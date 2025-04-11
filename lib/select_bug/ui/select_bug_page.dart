@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/ui/gameplay_page.dart';
 import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/ui/go_to.dart';
@@ -13,7 +13,7 @@ class SelectBugPage extends StatefulWidget {
 }
 
 class SelectBugPageState extends State<SelectBugPage> {
-  EmmyType type = EmmyType.all.first;
+  BugType type = BugType.all.first;
 
   double get hpad => 30;
 
@@ -33,7 +33,7 @@ class SelectBugPageState extends State<SelectBugPage> {
             children: [
               SelectBugWidget(
                 type: type,
-                allTypes: EmmyType.all,
+                allTypes: BugType.all,
                 setType: setType,
               ),
               Container(
@@ -46,7 +46,7 @@ class SelectBugPageState extends State<SelectBugPage> {
               horizontalDivider,
               row(description, playButton),
               horizontalDivider,
-              ...PersistedEmmyInt.all.expand(
+              ...PersistedBugInt.all.expand(
                 (pei) => [
                   row(
                     Text(
@@ -85,7 +85,7 @@ class SelectBugPageState extends State<SelectBugPage> {
 
   Widget get playButton {
     void play() {
-      PersistedEmmyInt.gamesPlayed[type]++;
+      PersistedBugInt.gamesPlayed[type]++;
       Navigator.of(context).pop();
       goTo(context, (context) => GameplayPage(initialBug: type));
     }
@@ -101,7 +101,7 @@ class SelectBugPageState extends State<SelectBugPage> {
     );
   }
 
-  void setType(EmmyType newType) {
+  void setType(BugType newType) {
     setState(() => type = newType);
   }
 

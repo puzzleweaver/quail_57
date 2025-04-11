@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/shared/data/static_persistence.dart';
 
 enum PersistedInt {
@@ -35,7 +35,7 @@ enum PersistedInt {
   set value(int value) => StaticPersistence.setInt(key, value);
 }
 
-enum PersistedEmmyInt {
+enum PersistedBugInt {
   gamesWon("times_won", Method.add),
   gamesLost("times_lost", Method.add),
   gamesPlayed("times_played_as", Method.add),
@@ -48,10 +48,10 @@ enum PersistedEmmyInt {
   final String keyPrefix;
   final Method method;
 
-  const PersistedEmmyInt(this.keyPrefix, this.method);
-  String key(EmmyType type) => "${keyPrefix}_$type";
+  const PersistedBugInt(this.keyPrefix, this.method);
+  String key(BugType type) => "${keyPrefix}_$type";
 
-  static List<PersistedEmmyInt> get all => [
+  static List<PersistedBugInt> get all => [
     gamesWon,
     gamesLost,
     gamesPlayed,
@@ -61,7 +61,7 @@ enum PersistedEmmyInt {
     maxKills,
   ];
 
-  String title(EmmyType type) => "$titlePrefix ${type.title}";
+  String title(BugType type) => "$titlePrefix ${type.title}";
   String get titlePrefix {
     return switch (this) {
       gamesWon => "Games Won",
@@ -76,13 +76,13 @@ enum PersistedEmmyInt {
   }
 
   // get/set by type
-  int operator [](EmmyType type) => StaticPersistence.getInt(key(type)) ?? 0;
-  operator []=(EmmyType type, int newValue) =>
+  int operator [](BugType type) => StaticPersistence.getInt(key(type)) ?? 0;
+  operator []=(BugType type, int newValue) =>
       StaticPersistence.setInt(key(type), newValue);
 
   // sum of data in all fields.
   int get total =>
-      EmmyType.all.map((type) => this[type]).reduce((a, b) => a + b);
+      BugType.all.map((type) => this[type]).reduce((a, b) => a + b);
 }
 
 enum Method {
