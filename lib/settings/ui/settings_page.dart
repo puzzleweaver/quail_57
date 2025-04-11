@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quail_57/settings/domain/persisted.dart';
-import 'package:quail_57/settings/ui/page_title.dart';
+import 'package:quail_57/settings/ui/titled_page.dart';
 import 'package:quail_57/settings/ui/setting_widget.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
 

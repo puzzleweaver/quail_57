@@ -8,6 +8,7 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(

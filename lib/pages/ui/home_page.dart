@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quail_57/pages/ui/home_page_background.dart';
 import 'package:quail_57/select_bug/ui/select_bug_page.dart';
-import 'package:quail_57/settings/ui/page_title.dart';
+import 'package:quail_57/settings/ui/titled_page.dart';
 import 'package:quail_57/settings/ui/settings_page.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
 import 'package:quail_57/shared/ui/go_to.dart';

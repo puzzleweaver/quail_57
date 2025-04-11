@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quail_57/pages/ui/home_page.dart';
 import 'package:quail_57/shared/data/sprites.dart';
-import 'package:quail_57/shared/data/static_shared_preferences.dart';
+import 'package:quail_57/shared/data/static_persistence.dart';
 
 void main() async {
   runApp(const App());
@@ -20,7 +20,7 @@ class App extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red.shade900),
       ),
       home: FutureBuilder(
-        future: Future.wait([Sprites.init(), StaticSharedPreferences.init()])
+        future: Future.wait([Sprites.init(), StaticPersistence.init()])
             .then((_) => "Done! :3")
             .catchError((error) => "Spritin' (or Settin?) failed: $error")
             .then((_) => "SOup"),

@@ -4,15 +4,16 @@ import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/data/sprites.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
+import 'package:quail_57/shared/ui/pair_first_second.dart';
 
 enum EmmyType {
-  antLarva(2, 6, 2),
   ant(5, 7, 6),
-  antQueen(10, 0, 0),
-  wasp(5, 0, 0),
   termite(5, 5, 4), // AVERAGE GUY
   bigTermite(7, 7, 5),
-  grub(20, 3, 1)
+  grub(20, 3, 1),
+  antLarva(2, 6, 2),
+  wasp(5, 0, 0),
+  antQueen(10, 0, 0)
   // yet unimplemented:
   // scarab(0, 0, 0),
   // tarantula(0, 0, 0),
@@ -27,14 +28,15 @@ enum EmmyType {
   final int hungriness;
   const EmmyType(this.health, this.attack, this.hungriness);
 
+  // order (kind of) matters here.
   static List<EmmyType> get all => [
-    antLarva,
     ant,
-    antQueen,
-    wasp,
     termite,
     bigTermite,
     grub,
+    antLarva,
+    wasp,
+    antQueen,
   ];
 
   List<ui.Image>? get images {
@@ -121,7 +123,9 @@ extension EmmyTypeTables on EmmyType {
     };
   }
 
-  (bool, String) get unlocked {
+  bool get isUnlocked => _unlocked.first;
+  String get unlockDescription => _unlocked.second;
+  (bool, String) get _unlocked {
     return switch (this) {
       EmmyType.antLarva => (false, "do you really want to play as a worm?"),
       EmmyType.ant => (true, "unlocked by default"),
@@ -129,13 +133,19 @@ extension EmmyTypeTables on EmmyType {
         false,
         "i don't think you can unlock her at all right now actually !",
       ),
-      EmmyType.wasp => (PersistedInt.gamesWon.value > 0, "beat the game."),
+      EmmyType.wasp => (
+        PersistedEmmyInt.gamesWon.total > 0,
+        "beat the game :)",
+      ),
       EmmyType.termite => (true, "unlocked by default."),
       EmmyType.bigTermite => (
-        PersistedInt.gamesWon.value > 0,
+        PersistedEmmyInt.gamesWon.total > 0,
         "beat the game.",
       ),
-      EmmyType.grub => (PersistedInt.gamesPlayed.value >= 3, "play 3 rounds."),
+      EmmyType.grub => (
+        PersistedEmmyInt.gamesPlayed.total >= 3,
+        "play 3 rounds.",
+      ),
     };
   }
 }

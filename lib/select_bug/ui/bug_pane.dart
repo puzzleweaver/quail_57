@@ -3,15 +3,14 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/entity/emmy_type.dart';
+import 'package:quail_57/shared/ui/pane/pane.dart';
 import 'package:quail_57/shared/data/sprites.dart';
-import 'package:quail_57/shared/ui/pair_first_second.dart';
-import 'package:quail_57/shared/ui/size_is_tall.dart';
 
 class BugPane extends StatefulWidget {
-  final bool showName;
   final EmmyType type;
+  final int? perScreen;
 
-  const BugPane({super.key, required this.type, required this.showName});
+  const BugPane({super.key, required this.type, this.perScreen});
 
   @override
   State<StatefulWidget> createState() => BugPaneState();
@@ -19,8 +18,6 @@ class BugPane extends StatefulWidget {
 
 class BugPaneState extends State<BugPane> {
   EmmyType get type => widget.type;
-  bool get showName => widget.showName;
-  bool get isLocked => !type.unlocked.first;
 
   late Timer timer;
   int idleValue = 0;
@@ -48,37 +45,39 @@ class BugPaneState extends State<BugPane> {
   @override
   Widget build(BuildContext context) {
     ui.Image? bugImage = type.frame(0);
-    return Stack(
-      alignment: Alignment.bottomCenter,
+    return Pane(
+      perScreen: widget.perScreen,
       children: [
         image(context, bugImage),
-        if (showName) Text(isLocked ? "" : type.title),
-        if (isLocked) ...{shadowPane(context), image(context, Sprites.lock)},
+        if (!type.isUnlocked) ...{shadowPane, image(context, Sprites.lock)},
+        ...decorations,
       ],
     );
   }
 
-  Widget shadowPane(BuildContext context) {
-    return square(
-      context: context,
-      child: Container(color: Colors.black.withAlpha(100)),
-    );
+  Widget get shadowPane {
+    return Container(color: Colors.black.withAlpha(100));
+  }
+
+  List<Widget> get decorations {
+    return [
+      Container(
+        alignment: Alignment.bottomRight,
+        child: Icon(Icons.star, color: Colors.orange, size: 28),
+      ),
+      Container(
+        alignment: Alignment.topLeft,
+        child: Icon(Icons.flag, color: Colors.blue, size: 28),
+      ),
+    ];
   }
 
   Widget image(BuildContext context, ui.Image? image) {
     if (image == null) return Container();
-    return square(
-      context: context,
-      child: RawImage(
-        image: image,
-        fit: BoxFit.fill,
-        filterQuality: FilterQuality.none,
-      ),
+    return RawImage(
+      image: image,
+      fit: BoxFit.fill,
+      filterQuality: FilterQuality.none,
     );
-  }
-
-  Widget square({required BuildContext context, required Widget child}) {
-    double lesser = MediaQuery.of(context).size.lesser;
-    return SizedBox.square(dimension: lesser / 3.5, child: child);
   }
 }

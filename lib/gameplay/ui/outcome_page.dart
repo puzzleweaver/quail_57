@@ -1,39 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/settings/domain/persisted.dart';
-import 'package:quail_57/settings/ui/page_title.dart';
+import 'package:quail_57/gameplay/domain/tree.dart';
+import 'package:quail_57/settings/ui/titled_page.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
 
 class OutcomePage extends StatefulWidget {
-  final int turnsSurvived;
-  final int kills;
-  final bool youWon;
-  // TODO stats?
+  final Tree tree;
 
-  const OutcomePage({
-    super.key,
-    required this.youWon,
-    required this.kills,
-    required this.turnsSurvived,
-  });
+  const OutcomePage({super.key, required this.tree});
 
   @override
   State<StatefulWidget> createState() => OutcomePageState();
 }
 
 class OutcomePageState extends State<OutcomePage> {
+  Tree get tree => widget.tree;
+
+  bool get youWon => tree.youWon;
+
   @override
   void initState() {
-    // update statistics
-    if (!widget.youWon) PersistedInt.gamesLost.value++;
-    if (widget.youWon) PersistedInt.gamesWon.value++;
-
-    if (widget.turnsSurvived > PersistedInt.maxTurnsSurvived.value) {
-      PersistedInt.maxTurnsSurvived.value = widget.turnsSurvived;
-    }
-
-    if (widget.kills > PersistedInt.maxKills.value) {
-      PersistedInt.maxKills.value = widget.kills;
-    }
+    // TODO update statistics
     super.initState();
   }
 
@@ -43,16 +29,12 @@ class OutcomePageState extends State<OutcomePage> {
       child: Center(
         child: SingleChildScrollView(
           child: TitledPage(
-            title: widget.youWon ? "You Won!" : "You Died.",
+            title: youWon ? "You Won!" : "You Died.",
             children: [
               Container(
                 padding: EdgeInsets.all(20),
                 child: Text(
-                  [
-                    "Your stats were:",
-                    "Kills: ${widget.kills}",
-                    "Turns Survived: ${widget.turnsSurvived}",
-                  ].join("\n"),
+                  ["Your stats were:", "TODO lmao"].join("\n"),
                   style: TextStyle(color: Colors.white),
                 ),
               ),

@@ -31,13 +31,7 @@ class GameplayPageState extends State<GameplayPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (tree.isEndgame) {
-      return OutcomePage(
-        youWon: tree.youWon,
-        kills: previous.you?.kills ?? 0,
-        turnsSurvived: tree.turns,
-      );
-    }
+    if (tree.isEndgame) return OutcomePage(tree: tree);
     Size size = MediaQuery.of(context).size;
     double dim = min(size.width, size.height);
     size = Size(dim, dim);
@@ -63,7 +57,6 @@ class GameplayPageState extends State<GameplayPage> {
           Navigator.pop(context);
         }
       },
-
       child: AppScaffold(
         child: Center(
           child: Column(

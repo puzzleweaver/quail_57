@@ -31,9 +31,9 @@ class HomePageBackgroundState extends State<HomePageBackground>
     );
     animation = Tween<double>(begin: 0, end: 6.283).animate(controller)
       ..addListener(() {
-        setState(() {
-          // The state that has changed here is the animation object's value.
-        });
+        if (mounted) {
+          setState(() {});
+        }
       });
     controller.repeat();
   }

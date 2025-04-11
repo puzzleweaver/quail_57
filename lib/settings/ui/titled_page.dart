@@ -4,12 +4,14 @@ class TitledPage extends StatelessWidget {
   final String title;
   final String? subtitle;
   final List<Widget> children;
+  final double? spacing;
 
   const TitledPage({
     super.key,
     required this.title,
     required this.children,
     this.subtitle,
+    this.spacing,
   });
 
   @override
@@ -17,6 +19,7 @@ class TitledPage extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: Column(
+        spacing: spacing ?? 0,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [_titleWidget(), _subtitleWidget(), ...children],
