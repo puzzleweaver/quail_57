@@ -3,11 +3,11 @@ import 'dart:ui' as ui;
 import 'package:quail_57/shared/data/sprites.dart';
 
 class Fruit {
-  final FruitType fruitType;
-  Fruit({required this.fruitType});
+  final FruitType type;
+  Fruit({required this.type});
 
-  static Fruit get apple => Fruit(fruitType: FruitType.apple);
-  static Fruit get log => Fruit(fruitType: FruitType.log);
+  static Fruit get apple => Fruit(type: FruitType.apple);
+  static Fruit get log => Fruit(type: FruitType.log);
 }
 
 enum FruitType {

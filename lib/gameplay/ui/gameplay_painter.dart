@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
+import 'package:quail_57/gameplay/domain/turn.dart';
 import 'package:quail_57/gameplay/ui/gameplay_renderer.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/tree.dart';
 
 class GameplayPainter extends CustomPainter {
-  final Tree fromTree;
-  final Tree tree;
+  final Turn turn;
   final ZoomedViewport viewport;
   final Animation<double> animation;
   final bool isTall;
@@ -15,9 +14,8 @@ class GameplayPainter extends CustomPainter {
 
   GameplayPainter({
     super.repaint,
-    required this.tree,
+    required this.turn,
     required this.viewport,
-    required this.fromTree,
     required this.animation,
     required this.idleValue,
     required this.isTall,
@@ -42,31 +40,32 @@ class GameplayPainter extends CustomPainter {
     //     ..style = PaintingStyle.fill,
     // );
 
-    Coordinate? root = tree.root;
-    renderer.drawDepthOverlay(root?.depth);
+    Coordinate? root = turn.root;
+    renderer.drawDepthOverlay(root.depth);
 
     void treeFrom(Coordinate? root) {
-      renderer.drawTree(previousTree: fromTree, tree: tree, coordinate: root);
+      renderer.drawTileRecursive(turn: turn, coordinate: root);
     }
 
-    bool movedInto = tree.whereYou == fromTree.whereYou.into;
-    bool movedOutof = tree.whereYou == fromTree.whereYou.outof;
+    Coordinate? previousWhereYou = turn.you?.previousMove?.where;
+    bool movedInto = turn.whereYou == previousWhereYou?.into;
+    bool movedOutof = turn.whereYou == previousWhereYou?.outof;
     if (!animation.isCompleted) {
-      if (movedInto) root = root?.outof;
+      if (movedInto) root = root.outof;
       if (movedOutof) root = root;
     }
     treeFrom(root);
 
     // offscreenMaybe
     if (isTall) {
-      treeFrom(root?.withOffset(BiTri.middle.up));
-      treeFrom(root?.withOffset(BiTri.middle.down));
+      treeFrom(root.withOffset(BiTri.middle.up));
+      treeFrom(root.withOffset(BiTri.middle.down));
     } else {
-      treeFrom(root?.withOffset(BiTri.middle.left));
-      treeFrom(root?.withOffset(BiTri.middle.right));
+      treeFrom(root.withOffset(BiTri.middle.left));
+      treeFrom(root.withOffset(BiTri.middle.right));
     }
 
-    if (tree.you?.isInDanger == true) {
+    if (turn.you?.isInDanger == true) {
       if (idleValue == 1) renderer.drawOverlay(Colors.red.withAlpha(50));
     }
   }

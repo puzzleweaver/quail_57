@@ -9,7 +9,7 @@ class MoveChanges {
   final Coordinate from;
   final Coordinate to;
 
-  MoveChanges(this.tree, this.from, this.to);
+  MoveChanges({required this.tree, required this.from, required this.to});
 
   Tile get fromTile => tree[from];
   Tile get toTile => tree[to];
@@ -17,11 +17,14 @@ class MoveChanges {
   Bug? get targetBug => toTile.bug;
   Fruit? get targetFruit => toTile.fruit;
 
-  Map<Coordinate, Tile> _setFromAndTo(Tile newFromTile, Tile newToTile) {
-    return {from: newFromTile, to: newToTile};
+  Map<Coordinate, Tile> get normalMove {
+    return {
+      from: fromTile.withBug(null),
+      to: toTile.withBug(mover?.moved(from)),
+    };
   }
 
-  Map<Coordinate, Tile> get asMap {
+  Map<Coordinate, Tile> get getDeltas {
     Bug? mover = this.mover;
     Bug? targetBug = this.targetBug;
     Fruit? targetFruit = this.targetFruit;
@@ -30,34 +33,24 @@ class MoveChanges {
     if (mover == null) return {};
 
     // Handle bug collisions if they exist,
-    if (targetBug != null) return bugMap(mover, targetBug);
+    if (targetBug != null) {
+      return {
+        from: fromTile.withBug(mover.attacked(to)),
+        to: toTile.withBug(targetBug.defended(from, mover.type.attack)),
+      };
+    }
 
     // else handle fruit collision,
-    if (targetFruit != null) return fruitMap(mover, targetFruit);
+    if (targetFruit != null) {
+      bool canEat = mover.type.canEatFruit(targetFruit.type);
+      if (!canEat) return normalMove;
+      return {
+        from: fromTile.withBug(null),
+        to: toTile.withFruit(null).withBug(mover.ateFruit(from, targetFruit)),
+      };
+    }
 
     // else just move.
-    return _setFromAndTo(fromTile.withBug(null), toTile.withBug(mover));
-  }
-
-  Map<Coordinate, Tile> bugMap(Bug mover, Bug target) {
-    // Outcome outcome = mover.outcomeAgainst(target);
-    // return switch(outcome) {
-    //   case Outcome.ate => _setFromAndTo(),
-    //   case Outcome.gotEaten => _setFromAndTo(),
-    //   case Outcome.defend
-    // };
-
-    return {};
-  }
-
-  Map<Coordinate, Tile> fruitMap(Bug mover, Fruit target) {
-    bool canEat = mover.bugType.canEatFruit(target.fruitType);
-    if (canEat) {
-      return _setFromAndTo(
-        fromTile.withBug(null),
-        toTile.withBug(mover.eatFruit(from, target)).withFruit(null),
-      );
-    }
-    return _setFromAndTo(fromTile.withBug(null), toTile.withBug(mover));
+    return normalMove;
   }
 }

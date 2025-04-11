@@ -78,7 +78,7 @@ class Generate {
   }
 
   static Bug? bug(TileType type) {
-    if (0.9.roll) return null;
+    if (0.95.roll) return null;
     BugType? bugType = Generate.bugType(type);
     if (bugType == null) return null;
     return Bug.create(bugType);

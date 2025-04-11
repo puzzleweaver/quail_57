@@ -2,25 +2,23 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
+import 'package:quail_57/gameplay/domain/turn.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/tree.dart';
 import 'package:quail_57/settings/domain/persisted.dart';
-import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/size_is_tall.dart';
 
 class AnimatedGameWidget extends StatefulWidget {
   final Size size;
-  final Tree tree;
-  final void Function(Tree newTree) setTree;
+  final Turn turn;
+  final void Function(Turn newTurn) setTurn;
 
   const AnimatedGameWidget({
     super.key,
     required this.size,
-    required this.tree,
-    required this.setTree,
+    required this.turn,
+    required this.setTurn,
   });
 
   @override
@@ -30,20 +28,17 @@ class AnimatedGameWidget extends StatefulWidget {
 class AnimatedGameWidgetState extends State<AnimatedGameWidget>
     implements TickerProvider {
   // widget variables
-  Tree get tree => widget.tree;
+  Turn get turn => widget.turn;
   Size get size => widget.size;
-  void Function(Tree) get setTree => widget.setTree;
+  void Function(Turn) get setTurn => widget.setTurn;
 
-  Tree fromTree = Tree.initial(BugType.all.choice);
   ZoomedViewport fromViewport = ZoomedViewport.initial;
-  ZoomedViewport viewportOf(Tree tree) {
-    return fromViewport.lerpTo(rawViewportOf(tree), 1 - animation.value);
+  ZoomedViewport viewportOf(Turn turn) {
+    return fromViewport.lerpTo(rawViewportOf(turn), 1 - animation.value);
   }
 
-  ZoomedViewport rawViewportOf(Tree tree) {
-    return ZoomedViewport(
-      window: tree.root?.rect() ?? Rect.fromLTWH(0, 0, 1, 1),
-    );
+  ZoomedViewport rawViewportOf(Turn turn) {
+    return ZoomedViewport(window: turn.root.rect());
   }
 
   late Timer timer;
@@ -65,7 +60,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   }
 
   initViewport() {
-    fromViewport = rawViewportOf(tree);
+    fromViewport = rawViewportOf(turn);
   }
 
   initAnimation() {
@@ -104,9 +99,8 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
         onTapUp: onTap,
         child: CustomPaint(
           painter: GameplayPainter(
-            fromTree: fromTree,
-            tree: tree,
-            viewport: viewportOf(tree),
+            turn: turn,
+            viewport: viewportOf(turn),
             animation: animation,
             idleValue: idleValue,
             isTall: MediaQuery.of(context).size.isTall,
@@ -125,10 +119,10 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
     bool check(Coordinate? space) =>
         space
             ?.rect(unit: unit)
-            .contains(viewportOf(tree).inverseTransform(tap, Size(dim, dim))) ??
+            .contains(viewportOf(turn).inverseTransform(tap, Size(dim, dim))) ??
         false;
 
-    Coordinate? current = tree.whereYou;
+    Coordinate current = turn.whereYou;
     Iterable<Coordinate> adjacents =
         [
           current.right,
@@ -142,7 +136,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
         ].whereType<Coordinate>();
     // if you tap the tile you're on, you go up or down
     if (check(current)) {
-      if (tree[current].hasFloor) return moveTo(current.outof);
+      if (turn.currentTree[current].hasFloor) return moveTo(current.outof);
       return moveTo(current.into);
     }
     // if you tap an adjacent tile, you go there
@@ -153,19 +147,12 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
 
   void moveTo(Coordinate? newYou) {
     if (newYou == null) return;
-    Tree newTree = tree.moveYouTo(newYou);
+    // TODO skip through everyone else's turns that are left?
+    Turn newTurn = turn.afterYourNextTurn(newYou);
 
     // try to rebase!
-    int? rebasableBy = newTree.rebasableBy;
-    setState(() {
-      fromTree = tree;
-      if (rebasableBy != null) {
-        newTree = newTree.rebase(rebasableBy);
-        fromTree = fromTree.rebase(rebasableBy);
-      }
-      fromViewport = rawViewportOf(fromTree);
-    });
-    setTree(newTree);
+    setState(() => fromViewport = rawViewportOf(turn));
+    setTurn(newTurn);
     controller.reset();
     controller.forward();
   }

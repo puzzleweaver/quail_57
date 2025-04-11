@@ -1,30 +1,28 @@
-import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/data/sprites.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/pair_first_second.dart';
+import 'package:quail_57/shared/ui/rect_animation.dart';
 
 enum BugType {
-  ant(5, 7, 6),
-  termite(5, 5, 4), // AVERAGE GUY
-  bigTermite(7, 7, 5),
-  grub(20, 3, 1),
-  antLarva(2, 6, 2),
-  wasp(5, 0, 0),
-  antQueen(10, 0, 0)
+  ant(30, 7, 6),
+  termite(30, 5, 4), // AVERAGE GUY
+  bigTermite(40, 7, 5),
+  grub(100, 3, 1),
+  antLarva(20, 6, 2),
+  wasp(30, 0, 0),
+  antQueen(150, 0, 0)
   // yet unimplemented:
   // scarab(0, 0, 0),
   // tarantula(0, 0, 0),
   // beetle(0, 0, 0),
   ;
 
-  // 1 is "immediately dies", 5 is "takes a hit", 10 is "takes 3+ hits"
   final int health;
-  // 1 is "barely touches you", 5 is "hits you", 10 is "immediately kills you"
   final int attack;
-  // 1 is "barely has hunger", 5 is "needs food sometimes", 10 is "constantly eating"
   final int hungriness;
   const BugType(this.health, this.attack, this.hungriness);
 
@@ -39,7 +37,7 @@ enum BugType {
     antQueen,
   ];
 
-  List<ui.Image>? get images {
+  List<Image>? get images {
     return switch (this) {
       antLarva => Sprites.antLarva,
       BugType.ant => Sprites.ant,
@@ -51,7 +49,7 @@ enum BugType {
     };
   }
 
-  ui.Image? frame(int idleValue) {
+  Image? frame(int idleValue) {
     switch (this) {
       case antLarva:
       case grub:
@@ -59,6 +57,18 @@ enum BugType {
       case _:
         return images?.choice;
     }
+  }
+
+  RectAnimation get animation {
+    return switch (this) {
+      BugType.ant => RectAnimations.basic,
+      BugType.termite => RectAnimations.basic,
+      BugType.bigTermite => RectAnimations.basic,
+      BugType.grub => RectAnimations.basic,
+      BugType.antLarva => RectAnimations.basic,
+      BugType.wasp => RectAnimations.basic,
+      BugType.antQueen => RectAnimations.basic,
+    };
   }
 
   bool canEatFruit(FruitType fruit) {
@@ -83,9 +93,7 @@ enum BugType {
       },
     };
   }
-}
 
-extension BugTypeTables on BugType {
   String get title {
     return switch (this) {
       BugType.antLarva => "Ant Larva",

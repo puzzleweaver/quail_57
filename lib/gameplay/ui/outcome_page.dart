@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/tree.dart';
+import 'package:quail_57/gameplay/domain/turn.dart';
 import 'package:quail_57/settings/ui/titled_page.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
 
 class OutcomePage extends StatefulWidget {
-  final Tree tree;
+  final Turn turn;
 
-  const OutcomePage({super.key, required this.tree});
+  const OutcomePage({super.key, required this.turn});
 
   @override
   State<StatefulWidget> createState() => OutcomePageState();
 }
 
 class OutcomePageState extends State<OutcomePage> {
-  Tree get tree => widget.tree;
-
-  bool get youWon => tree.youWon;
+  Turn get turn => widget.turn;
 
   @override
   void initState() {
@@ -29,7 +27,7 @@ class OutcomePageState extends State<OutcomePage> {
       child: Center(
         child: SingleChildScrollView(
           child: TitledPage(
-            title: youWon ? "You Won!" : "You Died.",
+            title: turn.youWon ? "You Won!" : "You Died.",
             children: [
               Container(
                 padding: EdgeInsets.all(20),

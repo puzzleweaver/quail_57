@@ -1,5 +1,6 @@
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
+import 'package:quail_57/gameplay/domain/move.dart';
 import 'package:quail_57/gameplay/domain/tile_type.dart';
 import 'package:quail_57/shared/data/generate.dart';
 
@@ -29,8 +30,17 @@ class Tile {
   Tile withFruit(Fruit? fruit) =>
       Tile(bug: bug, hasFloor: hasFloor, type: type, fruit: fruit);
 
+  Tile rebase(int byDepth) => Tile(
+    hasFloor: hasFloor,
+    bug: bug?.rebase(byDepth),
+    fruit: fruit,
+    type: type,
+  );
+
   Tile get withoutFloor =>
       Tile(bug: bug, fruit: null, hasFloor: false, type: type);
+
+  Tile get withMovesCleared => withBug(bug?.withMove(Move.none));
 
   bool get isEmpty => bug == null && fruit == null;
   bool get hasYou => bug?.isYou ?? false;

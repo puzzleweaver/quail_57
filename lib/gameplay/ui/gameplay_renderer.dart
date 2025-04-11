@@ -4,13 +4,14 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/move_type.dart';
+import 'package:quail_57/gameplay/domain/move.dart';
+import 'package:quail_57/gameplay/domain/tile.dart';
+import 'package:quail_57/gameplay/domain/turn.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/tile_type.dart';
-import 'package:quail_57/gameplay/domain/tree.dart';
-import 'package:quail_57/shared/ui/rect_lerp.dart';
+import 'package:quail_57/shared/ui/rect_animation.dart';
 
 class GameplayRenderer {
   final Size size;
@@ -42,9 +43,8 @@ class GameplayRenderer {
     );
   }
 
-  TileRenderer drawTree({
-    required Tree previousTree,
-    required Tree tree,
+  TileRenderer drawTileRecursive({
+    required Turn turn,
     required Coordinate? coordinate,
     int? depthLeft,
     bool first = true,
@@ -54,16 +54,17 @@ class GameplayRenderer {
     //   drawSpace();
     // }
     if (coordinate == null) return TileRenderer();
+
+    Tile tile = turn.currentTree[coordinate];
     if (depthLeft > 0) {
       List<TileRenderer> tilesToRender = [];
       for (BiTri bt in BiTri.all(allowMiddle: true)) {
-        bool isLeaf = tree[coordinate].hasFloor == true;
+        bool isLeaf = tile.hasFloor == true;
         int nextDepth = isLeaf ? 0 : depthLeft - 1;
         Coordinate? nextCoordinate = coordinate.into.replaceLast(bt);
         tilesToRender.add(
-          drawTree(
-            previousTree: previousTree,
-            tree: tree,
+          drawTileRecursive(
+            turn: turn,
             coordinate: nextCoordinate,
             depthLeft: nextDepth,
             first: false,
@@ -85,22 +86,23 @@ class GameplayRenderer {
     Rect rect = _rectFromCoord(coordinate);
 
     TileRenderer ret = TileRenderer(
-      drawBug: () => drawBug(tree[coordinate].bug, rect, previousTree),
-      drawFruit: () => drawFruit(tree[coordinate].fruit, rect),
-      drawTile: () => drawTile(tree, coordinate, rect),
+      drawBug: () => drawBug(tile.bug, rect, turn),
+      drawFruit: () => drawFruit(tile.fruit, rect),
+      drawTile: () => drawTile(turn, coordinate, rect),
     );
     if (first) ret.drawAll();
     return ret;
   }
 
-  void drawTile(Tree tree, Coordinate where, Rect rect) {
-    if (tree.whereYou == where) drawRect(rect);
+  void drawTile(Turn turn, Coordinate where, Rect rect) {
+    if (turn.whereYou == where) drawRect(rect);
 
     // shadow (on the things underneath)
     drawShadowPane(rect, where.depth);
 
     // floor
-    drawFloor(rect, tree[where].hasFloor, tree[where].type);
+    Tile tile = turn.currentTree[where];
+    drawFloor(rect, tile.hasFloor, tile.type);
   }
 
   void drawFloor(Rect rect, bool hole, TileType type) =>
@@ -148,45 +150,25 @@ class GameplayRenderer {
     // return sky;
   }
 
-  void drawBug(Bug? bug, Rect rect, Tree fromTree) {
+  void drawBug(Bug? bug, Rect rect, Turn turn) {
     if (bug == null) return;
-    MoveType? moveType = bug.previousMove;
+    Move? move = bug.previousMove;
 
     Rect toRect = rect;
-    Coordinate? from = fromTree.findBug(bug);
+    Coordinate? from = move?.where;
     if (from != null) {
       Rect fromRect = _rectFromCoord(from);
-      rect = fromRect.lerpTo(toRect, animation.value);
+      rect = (move?.type.animation ?? bug.type.animation).animate(
+        RectAnimationArgs(fromRect, toRect, animation.value),
+      );
     }
 
-    switch (moveType) {
-      case MoveType.none:
-      case null:
-        drawImageRect(bug.bugType.frame(idleValue), rect);
-      case MoveType.blocked:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MoveType.normal:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MoveType.defend:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MoveType.attack:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MoveType.eat:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MoveType.die:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-    }
+    drawImageRect(bug.type.frame(idleValue), rect);
   }
 
   void drawFruit(Fruit? fruit, Rect rect) {
     if (fruit == null) return;
-    drawImageRect(fruit.fruitType.image, rect);
+    drawImageRect(fruit.type.image, rect);
   }
 
   void drawImageRect(ui.Image? image, Rect rect) {

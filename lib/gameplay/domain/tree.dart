@@ -1,76 +1,43 @@
-import 'dart:developer';
-
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
-import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/move_changes.dart';
 import 'package:quail_57/gameplay/domain/tile.dart';
-import 'package:quail_57/gameplay/domain/tile_type.dart';
 import 'package:quail_57/shared/data/generate.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 
 class Tree {
   final Map<Coordinate, Tile> map;
   final int depthOffset;
-  final int turns;
-  final Coordinate whereYou;
 
-  Tree({
-    required this.map,
-    required this.whereYou,
-    required this.depthOffset,
-    required this.turns,
-  }) {
-    int bugCount = whereEmmies().length;
-    String report = [
-      "",
-      "-----------------------",
-      "| Thing Count: $thingCount",
-      "| Bug Density: ${(bugCount / thingCount).toStringAsFixed(2)}",
-      "| You Depth: ${whereYou.depth}",
-      "| You Length: ${whereYou.length}",
-      "| Turns So Far: $turns",
-      "-----------------------",
-      "",
-    ].join("\n");
-    log(report);
-  }
-
-  bool get youLost => false;
-  bool get youWon => this[whereYou].type == TileType.goal;
-  bool get isEndgame => youWon || youLost;
+  Tree({required this.map, required this.depthOffset});
 
   int get thingCount => map.length;
 
-  static Tree initial(BugType bugType) {
-    Coordinate coordinate = Generate.coordinate(3, last: BiTri.middle);
-    Tree ret = Tree(map: {}, whereYou: coordinate, depthOffset: 0, turns: 0);
+  static Tree initial(Coordinate coordinate, BugType bugType) {
+    Tree ret = Tree(map: {}, depthOffset: 0);
     ret = ret.setTile(
       coordinate,
       ret[coordinate].withBug(Bug.create(bugType, isYou: true)),
     );
-    ret = ret.removeFloors();
+    ret = ret.removeFloors(coordinate);
+    return ret;
+  }
+
+  Tree get preparedForTurn {
+    return withMovesCleared;
+  }
+
+  Tree get withMovesCleared {
+    Tree ret = this;
+    for (Coordinate whereBug in whereBugs()) {
+      ret = ret.setTile(whereBug, this[whereBug].withMovesCleared);
+    }
     return ret;
   }
 
   Tree setTile(Coordinate coordinate, Tile tile) {
-    return Tree(
-      map: {...map, coordinate: tile},
-      whereYou: whereYou,
-      depthOffset: depthOffset,
-      turns: turns,
-    );
-  }
-
-  Tree touchAll(Coordinate? root, int depth) {
-    if (depth <= 0 || root == null) return this;
-    this[root];
-    Tree ret = this;
-    for (BiTri bt in BiTri.all()) {
-      ret = touchAll(root.into.replaceLast(bt), depth - 1);
-    }
-    return ret;
+    return Tree(map: {...map, coordinate: tile}, depthOffset: depthOffset);
   }
 
   Tile operator [](Coordinate? where) {
@@ -80,10 +47,13 @@ class Tree {
     return map[where] ??= Generate.tile(where.depth);
   }
 
-  Coordinate? findBug(Bug? target) {
-    if (target == null) return null;
+  Coordinate? findBug(bool Function(Bug) condition) {
     return map.entries
-        .where((entry) => entry.value.bug?.id == target.id)
+        .where((entry) {
+          Bug? bug = entry.value.bug;
+          if (bug == null) return false;
+          return condition(bug);
+        })
         .firstOrNull
         ?.key;
   }
@@ -94,7 +64,7 @@ class Tree {
   ) {
     Coordinate? rebased = entry.key.rebase(byDepth);
     if (rebased == null || rebased.length > 23) return {};
-    return {rebased: entry.value};
+    return {rebased: entry.value.rebase(byDepth)};
   }
 
   Tree rebase(int byDepth) {
@@ -104,48 +74,24 @@ class Tree {
           ..._rebaseEntry(entry, byDepth),
       },
       depthOffset: depthOffset + byDepth,
-      turns: turns,
-      whereYou: whereYou.rebase(byDepth) ?? Coordinate.zero,
     );
   }
 
-  int? get rebasableBy {
-    Coordinate? whereYou = this.whereYou;
-    if (whereYou.length > 20) return 5;
-    if (whereYou.length < 5) return -5;
-    return null;
-  }
-
-  Tree removeFloors() {
-    Coordinate? whereYou = this.whereYou;
+  Tree removeFloors(Coordinate coordinate) {
     Tree ret = this;
-    void at(Coordinate? where) {
-      if (where == null) return;
-      ret = ret.setTile(where, ret[where].withoutFloor);
+    for (int i = 0; i < 3; i++) {
+      coordinate = coordinate.outof;
+      ret = ret.setTile(coordinate, ret[coordinate].withoutFloor);
     }
-
-    at(whereYou.outof);
-    at(whereYou.outof.outof);
-    at(whereYou.outof.outof.outof);
-    at(whereYou.outof.outof.outof.outof);
-
     return ret;
   }
 
-  Iterable<Coordinate> whereEmmies({bool includeYou = false}) => map.entries
+  Iterable<Coordinate> whereBugs({bool includeYou = false}) => map.entries
       .where((entry) {
         if (!includeYou && entry.value.hasYou) return false;
         return entry.value.hasBug;
       })
       .map((entry) => entry.key);
-
-  Bug? get you {
-    Bug? entity = this[whereYou].bug;
-    if (entity == null || !entity.isYou) return null;
-    return entity;
-  }
-
-  Coordinate? get root => whereYou.outof;
 
   Coordinate randomStepFrom(Coordinate coordinate) {
     return [...coordinate.adjacents, coordinate.into, coordinate.outof]
@@ -155,40 +101,20 @@ class Tree {
         .choice;
   }
 
-  Tree moveYouTo(Coordinate whereYouGo) {
-    // stuff we can iterate on
-    Tree newTree = Tree(
-      map: {...map},
-      depthOffset: depthOffset,
-      turns: turns + 1,
-      whereYou: whereYouGo,
-    );
-    void makeMove(Coordinate? from, Coordinate? to) {
-      if (newTree.isMoveAllowed(from, to)) {
-        Map<Coordinate, Tile> changes = newTree.moveChanges(from, to);
-        for (final entry in changes.entries) {
-          newTree = newTree.setTile(entry.key, entry.value);
-        }
+  Tree withMove(Coordinate? from, Coordinate? to) {
+    Tree ret = this;
+    if (ret.isMoveAllowed(from, to)) {
+      Map<Coordinate, Tile> changes = ret.moveChanges(from, to);
+      for (final entry in changes.entries) {
+        ret = ret.setTile(entry.key, entry.value);
       }
     }
-
-    // move you
-    newTree = newTree.removeFloors();
-    Coordinate? whereYou = this.whereYou;
-    makeMove(whereYou, whereYouGo);
-
-    // move emmies
-    // for (Coordinate whereBug in newTree.allEmmies().toList()) {
-    //   Coordinate whereBugGo = randomStepFrom(whereBug);
-    //   makeMove(whereBug, whereBugGo);
-    // }
-
-    return newTree;
+    return ret;
   }
 
   Map<Coordinate, Tile> moveChanges(Coordinate? from, Coordinate? to) {
     if (from == null || to == null) return {};
-    return MoveChanges(this, from, to).asMap;
+    return MoveChanges(tree: this, from: from, to: to).getDeltas;
   }
 
   /// check if there is a wall
