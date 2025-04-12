@@ -1,8 +1,8 @@
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/tile.dart';
-import 'package:quail_57/gameplay/domain/tree.dart';
+import 'package:quail_57/gameplay/domain/entity/tile.dart';
+import 'package:quail_57/gameplay/domain/game/tree.dart';
 
 class MoveChanges {
   final Tree tree;

@@ -1,8 +1,8 @@
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/move_changes.dart';
-import 'package:quail_57/gameplay/domain/tile.dart';
+import 'package:quail_57/gameplay/domain/game/move_changes.dart';
+import 'package:quail_57/gameplay/domain/entity/tile.dart';
 import 'package:quail_57/shared/data/generate.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 
@@ -11,8 +11,6 @@ class Tree {
   final int depthOffset;
 
   Tree({required this.map, required this.depthOffset});
-
-  int get thingCount => map.length;
 
   static Tree initial(Coordinate coordinate, BugType bugType) {
     Tree ret = Tree(map: {}, depthOffset: 0);
@@ -30,8 +28,8 @@ class Tree {
 
   Tree get withMovesCleared {
     Tree ret = this;
-    for (Coordinate whereBug in whereBugs()) {
-      ret = ret.setTile(whereBug, this[whereBug].withMovesCleared);
+    for (Coordinate bugCoordinates in allBugCoordinates()) {
+      ret = ret.setTile(bugCoordinates, this[bugCoordinates].withMovesCleared);
     }
     return ret;
   }
@@ -47,15 +45,33 @@ class Tree {
     return map[where] ??= Generate.tile(where.depth);
   }
 
-  Coordinate? findBug(bool Function(Bug) condition) {
-    return map.entries
-        .where((entry) {
-          Bug? bug = entry.value.bug;
-          if (bug == null) return false;
-          return condition(bug);
-        })
-        .firstOrNull
-        ?.key;
+  Iterable<MapEntry<Coordinate, Tile>> allBugEntries({
+    bool Function(Bug)? where,
+  }) {
+    return map.entries.where((entry) {
+      Bug? bug = entry.value.bug;
+      if (bug == null) return false;
+      return where?.call(bug) ?? true;
+    });
+  }
+
+  Iterable<Coordinate> allBugCoordinates({bool Function(Bug)? where}) {
+    return allBugEntries(where: where).map((entry) => entry.key);
+  }
+
+  Iterable<Bug> allBugs({bool Function(Bug)? where}) {
+    Iterable<Coordinate> bugCoordinates = allBugCoordinates(where: where);
+    return bugCoordinates
+        .map((coordinate) => this[coordinate].bug)
+        .whereType<Bug>();
+  }
+
+  Iterable<String> allBugIds({bool Function(Bug)? where}) {
+    return allBugs(where: where).map((bug) => bug.id);
+  }
+
+  Coordinate? findBug({bool Function(Bug)? where}) {
+    return allBugCoordinates(where: where).firstOrNull;
   }
 
   Map<Coordinate, Tile> _rebaseEntry(
@@ -84,21 +100,6 @@ class Tree {
       ret = ret.setTile(coordinate, ret[coordinate].withoutFloor);
     }
     return ret;
-  }
-
-  Iterable<Coordinate> whereBugs({bool includeYou = false}) => map.entries
-      .where((entry) {
-        if (!includeYou && entry.value.hasYou) return false;
-        return entry.value.hasBug;
-      })
-      .map((entry) => entry.key);
-
-  Coordinate randomStepFrom(Coordinate coordinate) {
-    return [...coordinate.adjacents, coordinate.into, coordinate.outof]
-        .whereType<Coordinate>()
-        .where((step) => isMoveAllowed(coordinate, step))
-        .toList()
-        .choice;
   }
 
   Tree withMove(Coordinate? from, Coordinate? to) {

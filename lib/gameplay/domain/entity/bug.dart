@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/move.dart';
+import 'package:quail_57/gameplay/domain/game/move.dart';
 import 'package:quail_57/shared/data/generate.dart';
 
 class Bug {
@@ -11,7 +11,6 @@ class Bug {
   final BugType type;
   final int health;
   final int belly;
-
   final Move? previousMove;
   final bool isYou;
   final int kills;
@@ -94,7 +93,6 @@ class Bug {
   }
 
   Bug defended(Coordinate from, int attack) {
-    print("$type ${id.substring(0, 6)} attacked -$attack");
     return withMove(Move.defend(from)).withHealth(health - attack);
   }
 

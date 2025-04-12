@@ -1,7 +1,7 @@
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
-import 'package:quail_57/gameplay/domain/move.dart';
-import 'package:quail_57/gameplay/domain/tile_type.dart';
+import 'package:quail_57/gameplay/domain/game/move.dart';
+import 'package:quail_57/gameplay/domain/entity/tile_type.dart';
 import 'package:quail_57/shared/data/generate.dart';
 
 /// A thing that might be placed at a coordinate.

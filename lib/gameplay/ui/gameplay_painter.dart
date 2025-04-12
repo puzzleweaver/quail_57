@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/turn.dart';
+import 'package:quail_57/gameplay/domain/game/game.dart';
 import 'package:quail_57/gameplay/ui/gameplay_renderer.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 
 class GameplayPainter extends CustomPainter {
-  final Turn turn;
+  final Game game;
   final ZoomedViewport viewport;
   final Animation<double> animation;
   final bool isTall;
@@ -14,7 +14,7 @@ class GameplayPainter extends CustomPainter {
 
   GameplayPainter({
     super.repaint,
-    required this.turn,
+    required this.game,
     required this.viewport,
     required this.animation,
     required this.idleValue,
@@ -40,16 +40,16 @@ class GameplayPainter extends CustomPainter {
     //     ..style = PaintingStyle.fill,
     // );
 
-    Coordinate? root = turn.root;
+    Coordinate? root = game.root;
     renderer.drawDepthOverlay(root.depth);
 
     void treeFrom(Coordinate? root) {
-      renderer.drawTileRecursive(turn: turn, coordinate: root);
+      renderer.drawTileRecursive(game: game, coordinate: root);
     }
 
-    Coordinate? previousWhereYou = turn.you?.previousMove?.where;
-    bool movedInto = turn.whereYou == previousWhereYou?.into;
-    bool movedOutof = turn.whereYou == previousWhereYou?.outof;
+    Coordinate? previousYouCoordinate = game.you?.previousMove?.coordinate;
+    bool movedInto = game.youCoordinate == previousYouCoordinate?.into;
+    bool movedOutof = game.youCoordinate == previousYouCoordinate?.outof;
     if (!animation.isCompleted) {
       if (movedInto) root = root.outof;
       if (movedOutof) root = root;
@@ -65,9 +65,9 @@ class GameplayPainter extends CustomPainter {
       treeFrom(root.withOffset(BiTri.middle.right));
     }
 
-    if (turn.you?.isInDanger == true) {
-      if (idleValue == 1) renderer.drawOverlay(Colors.red.withAlpha(50));
-    }
+    // if (game.you?.isInDanger == true) {
+    //   if (idleValue == 1) renderer.drawOverlay(Colors.red.withAlpha(50));
+    // }
   }
 
   @override

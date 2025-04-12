@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/turn.dart';
+import 'package:quail_57/gameplay/domain/game/game.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/settings/domain/persisted.dart';
@@ -11,14 +11,14 @@ import 'package:quail_57/shared/ui/size_is_tall.dart';
 
 class AnimatedGameWidget extends StatefulWidget {
   final Size size;
-  final Turn turn;
-  final void Function(Turn newTurn) setTurn;
+  final Game game;
+  final void Function(Game newGame) setGame;
 
   const AnimatedGameWidget({
     super.key,
     required this.size,
-    required this.turn,
-    required this.setTurn,
+    required this.game,
+    required this.setGame,
   });
 
   @override
@@ -28,17 +28,16 @@ class AnimatedGameWidget extends StatefulWidget {
 class AnimatedGameWidgetState extends State<AnimatedGameWidget>
     implements TickerProvider {
   // widget variables
-  Turn get turn => widget.turn;
+  Game get game => widget.game;
   Size get size => widget.size;
-  void Function(Turn) get setTurn => widget.setTurn;
 
   ZoomedViewport fromViewport = ZoomedViewport.initial;
-  ZoomedViewport viewportOf(Turn turn) {
-    return fromViewport.lerpTo(rawViewportOf(turn), 1 - animation.value);
+  ZoomedViewport viewportOf(Game game) {
+    return fromViewport.lerpTo(rawViewportOf(game), 1 - animation.value);
   }
 
-  ZoomedViewport rawViewportOf(Turn turn) {
-    return ZoomedViewport(window: turn.root.rect());
+  ZoomedViewport rawViewportOf(Game game) {
+    return ZoomedViewport(window: game.root.rect());
   }
 
   late Timer timer;
@@ -60,7 +59,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   }
 
   initViewport() {
-    fromViewport = rawViewportOf(turn);
+    fromViewport = rawViewportOf(game);
   }
 
   initAnimation() {
@@ -68,12 +67,18 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
       duration: Duration(milliseconds: PersistedInt.animationSpeed.value),
       vsync: this,
     );
-    animation = Tween<double>(begin: 0, end: 1).animate(controller)
-      ..addListener(() {
-        setState(() {
-          // The state that has changed here is the animation object's value.
-        });
-      });
+    animation =
+        Tween<double>(begin: 0, end: 1).animate(controller)
+          ..addListener(() {
+            if (mounted) setState(() {});
+          })
+          ..addStatusListener((status) {
+            if (status.isCompleted) onAnimationComplete();
+          });
+  }
+
+  void onAnimationComplete() {
+    if (!game.isYourTurn) setGame(game.afterNextTurn());
   }
 
   initIdleTimer() {
@@ -99,8 +104,8 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
         onTapUp: onTap,
         child: CustomPaint(
           painter: GameplayPainter(
-            turn: turn,
-            viewport: viewportOf(turn),
+            game: game,
+            viewport: viewportOf(game),
             animation: animation,
             idleValue: idleValue,
             isTall: MediaQuery.of(context).size.isTall,
@@ -119,10 +124,10 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
     bool check(Coordinate? space) =>
         space
             ?.rect(unit: unit)
-            .contains(viewportOf(turn).inverseTransform(tap, Size(dim, dim))) ??
+            .contains(viewportOf(game).inverseTransform(tap, Size(dim, dim))) ??
         false;
 
-    Coordinate current = turn.whereYou;
+    Coordinate current = game.youCoordinate;
     Iterable<Coordinate> adjacents =
         [
           current.right,
@@ -136,23 +141,23 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
         ].whereType<Coordinate>();
     // if you tap the tile you're on, you go up or down
     if (check(current)) {
-      if (turn.currentTree[current].hasFloor) return moveTo(current.outof);
-      return moveTo(current.into);
+      if (game.currentTree[current].hasFloor) return moveYou(current.outof);
+      return moveYou(current.into);
     }
     // if you tap an adjacent tile, you go there
     for (Coordinate coordinate in adjacents) {
-      if (check(coordinate)) return moveTo(coordinate);
+      if (check(coordinate)) return moveYou(coordinate);
     }
   }
 
-  void moveTo(Coordinate? newYou) {
-    if (newYou == null) return;
-    // TODO skip through everyone else's turns that are left?
-    Turn newTurn = turn.afterYourNextTurn(newYou);
+  void moveYou(Coordinate? to) {
+    if (to == null) return;
+    setGame(game.afterYourNextTurn(to));
+  }
 
-    // try to rebase!
-    setState(() => fromViewport = rawViewportOf(turn));
-    setTurn(newTurn);
+  void setGame(Game newGame) {
+    setState(() => fromViewport = rawViewportOf(game));
+    widget.setGame(newGame);
     controller.reset();
     controller.forward();
   }

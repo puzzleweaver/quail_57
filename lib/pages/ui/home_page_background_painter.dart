@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/ui/gameplay_renderer.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
-import 'package:quail_57/gameplay/domain/tile.dart';
+import 'package:quail_57/gameplay/domain/entity/tile.dart';
 import 'package:quail_57/shared/ui/pair_addition.dart';
 import 'package:quail_57/shared/ui/pair_first_second.dart';
 

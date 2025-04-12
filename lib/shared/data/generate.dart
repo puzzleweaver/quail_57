@@ -3,11 +3,12 @@ import 'dart:math';
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
+import 'package:quail_57/gameplay/domain/game/tree.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/geometry/tri.dart';
-import 'package:quail_57/gameplay/domain/tile.dart';
-import 'package:quail_57/gameplay/domain/tile_type.dart';
+import 'package:quail_57/gameplay/domain/entity/tile.dart';
+import 'package:quail_57/gameplay/domain/entity/tile_type.dart';
 import 'package:quail_57/shared/ui/double_roll.dart';
 import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/map_range_pick.dart';
@@ -24,6 +25,15 @@ class Generate {
       for (int i = 0; i < length; i++)
         if (i == length - 1) (last ?? biTri()) else biTri(),
     ], 0);
+  }
+
+  static Coordinate step(Tree tree, Coordinate coordinate) {
+    // TODO improve this lmao
+    return [...coordinate.adjacents, coordinate.into, coordinate.outof]
+        .whereType<Coordinate>()
+        .where((step) => tree.isMoveAllowed(coordinate, step))
+        .toList()
+        .choice;
   }
 
   static TileType spaceType(int depth) {

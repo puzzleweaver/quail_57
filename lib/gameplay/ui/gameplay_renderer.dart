@@ -4,13 +4,13 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
-import 'package:quail_57/gameplay/domain/move.dart';
-import 'package:quail_57/gameplay/domain/tile.dart';
-import 'package:quail_57/gameplay/domain/turn.dart';
+import 'package:quail_57/gameplay/domain/game/move.dart';
+import 'package:quail_57/gameplay/domain/entity/tile.dart';
+import 'package:quail_57/gameplay/domain/game/game.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/fruit.dart';
-import 'package:quail_57/gameplay/domain/tile_type.dart';
+import 'package:quail_57/gameplay/domain/entity/tile_type.dart';
 import 'package:quail_57/shared/ui/rect_animation.dart';
 
 class GameplayRenderer {
@@ -44,7 +44,7 @@ class GameplayRenderer {
   }
 
   TileRenderer drawTileRecursive({
-    required Turn turn,
+    required Game game,
     required Coordinate? coordinate,
     int? depthLeft,
     bool first = true,
@@ -55,7 +55,7 @@ class GameplayRenderer {
     // }
     if (coordinate == null) return TileRenderer();
 
-    Tile tile = turn.currentTree[coordinate];
+    Tile tile = game.currentTree[coordinate];
     if (depthLeft > 0) {
       List<TileRenderer> tilesToRender = [];
       for (BiTri bt in BiTri.all(allowMiddle: true)) {
@@ -64,7 +64,7 @@ class GameplayRenderer {
         Coordinate? nextCoordinate = coordinate.into.replaceLast(bt);
         tilesToRender.add(
           drawTileRecursive(
-            turn: turn,
+            game: game,
             coordinate: nextCoordinate,
             depthLeft: nextDepth,
             first: false,
@@ -86,22 +86,22 @@ class GameplayRenderer {
     Rect rect = _rectFromCoord(coordinate);
 
     TileRenderer ret = TileRenderer(
-      drawBug: () => drawBug(tile.bug, rect, turn),
+      drawBug: () => drawBug(tile.bug, rect, game),
       drawFruit: () => drawFruit(tile.fruit, rect),
-      drawTile: () => drawTile(turn, coordinate, rect),
+      drawTile: () => drawTile(game, coordinate, rect),
     );
     if (first) ret.drawAll();
     return ret;
   }
 
-  void drawTile(Turn turn, Coordinate where, Rect rect) {
-    if (turn.whereYou == where) drawRect(rect);
+  void drawTile(Game game, Coordinate where, Rect rect) {
+    if (game.youCoordinate == where) drawRect(rect);
 
     // shadow (on the things underneath)
     drawShadowPane(rect, where.depth);
 
     // floor
-    Tile tile = turn.currentTree[where];
+    Tile tile = game.currentTree[where];
     drawFloor(rect, tile.hasFloor, tile.type);
   }
 
@@ -150,12 +150,12 @@ class GameplayRenderer {
     // return sky;
   }
 
-  void drawBug(Bug? bug, Rect rect, Turn turn) {
+  void drawBug(Bug? bug, Rect rect, Game game) {
     if (bug == null) return;
     Move? move = bug.previousMove;
 
     Rect toRect = rect;
-    Coordinate? from = move?.where;
+    Coordinate? from = move?.coordinate;
     if (from != null) {
       Rect fromRect = _rectFromCoord(from);
       rect = (move?.type.animation ?? bug.type.animation).animate(
