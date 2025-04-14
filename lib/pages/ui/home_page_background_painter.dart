@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/ui/gameplay_renderer.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/gameplay/domain/entity/tile.dart';
@@ -34,6 +35,7 @@ class HomePageBackgroundPainter extends CustomPainter {
       idleValue: 0,
       animation: AlwaysStoppedAnimation(0),
       renderDepth: 0,
+      center: Coordinate.zero,
     );
 
     double time = animation.value;

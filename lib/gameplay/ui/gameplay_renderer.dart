@@ -20,6 +20,7 @@ class GameplayRenderer {
   final int renderDepth;
   final Animation animation;
   final int idleValue;
+  final Coordinate center;
 
   GameplayRenderer({
     required this.canvas,
@@ -28,6 +29,7 @@ class GameplayRenderer {
     required this.renderDepth,
     required this.animation,
     required this.idleValue,
+    required this.center,
   });
 
   void drawDepthOverlay(int? depth) {
@@ -58,10 +60,10 @@ class GameplayRenderer {
     Tile tile = game.currentTree[coordinate];
     if (depthLeft > 0) {
       List<TileRenderer> tilesToRender = [];
-      for (BiTri bt in BiTri.all(allowMiddle: true)) {
+      for (BiTri bt in BiTri.all) {
         bool isLeaf = tile.hasFloor == true;
         int nextDepth = isLeaf ? 0 : depthLeft - 1;
-        Coordinate? nextCoordinate = coordinate.into.replaceLast(bt);
+        Coordinate? nextCoordinate = coordinate.withLastAdded(bt);
         tilesToRender.add(
           drawTileRecursive(
             game: game,

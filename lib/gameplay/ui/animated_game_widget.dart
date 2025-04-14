@@ -33,11 +33,14 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
 
   ZoomedViewport fromViewport = ZoomedViewport.initial;
   ZoomedViewport viewportOf(Game game) {
-    return fromViewport.lerpTo(rawViewportOf(game), 1 - animation.value);
+    return fromViewport.lerpTo(
+      viewportFromRoot(game.root),
+      1 - animation.value,
+    );
   }
 
-  ZoomedViewport rawViewportOf(Game game) {
-    return ZoomedViewport(window: game.root.rect());
+  ZoomedViewport viewportFromRoot(Coordinate coordinate) {
+    return ZoomedViewport(window: coordinate.rect());
   }
 
   late Timer timer;
@@ -59,7 +62,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   }
 
   initViewport() {
-    fromViewport = rawViewportOf(game);
+    fromViewport = viewportFromRoot(game.root);
   }
 
   initAnimation() {
@@ -78,7 +81,15 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
   }
 
   void onAnimationComplete() {
-    if (!game.isYourTurn) setGame(game.afterNextTurn());
+    // don't automatically move if it's the player's turn.
+    if (game.isYourTurn) return;
+
+    setGame(
+      game
+          // TODO don't animate offscreen guys
+          // .skipTurnsUntil((game) => game.currentTree.isOnScreen(game.nextMoverId))
+          .doBugTurn(),
+    );
   }
 
   initIdleTimer() {
@@ -152,11 +163,11 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
 
   void moveYou(Coordinate? to) {
     if (to == null) return;
-    setGame(game.afterYourNextTurn(to));
+    setGame(game.doYourTurn(to));
   }
 
   void setGame(Game newGame) {
-    setState(() => fromViewport = rawViewportOf(game));
+    setState(() => fromViewport = viewportFromRoot(newGame.previousRoot));
     widget.setGame(newGame);
     controller.reset();
     controller.forward();

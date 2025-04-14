@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/shared/ui/pane/pane.dart';
 import 'package:quail_57/shared/data/sprites.dart';
 
@@ -61,14 +62,15 @@ class BugPaneState extends State<BugPane> {
 
   List<Widget> get decorations {
     return [
-      Container(
-        alignment: Alignment.bottomRight,
-        child: Icon(Icons.star, color: Colors.orange, size: 28),
-      ),
-      Container(
-        alignment: Alignment.topLeft,
-        child: Icon(Icons.flag, color: Colors.blue, size: 28),
-      ),
+      if (PersistedBugInt.gamesWon[type] > 0)
+        Container(
+          alignment: Alignment.bottomRight,
+          child: Icon(Icons.star, color: Colors.orange, size: 28),
+        ),
+      // Container(
+      //   alignment: Alignment.topLeft,
+      //   child: Icon(Icons.flag, color: Colors.blue, size: 28),
+      // ),
     ];
   }
 

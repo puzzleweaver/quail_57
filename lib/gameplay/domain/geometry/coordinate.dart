@@ -7,22 +7,35 @@ import 'package:quail_57/gameplay/domain/geometry/tri.dart';
 class Coordinate {
   final List<BiTri> sequence;
   final int depthOffset;
+
   Coordinate(this.sequence, this.depthOffset);
+
+  static Coordinate get zero => Coordinate([], 0);
 
   int get length => sequence.length;
   int get depth => depthOffset + length;
 
-  static Coordinate get zero => Coordinate([], 0);
   Coordinate get into => Coordinate([...sequence, BiTri.middle], depthOffset);
-  Coordinate get outof => Coordinate(withoutLast, depthOffset);
-  Coordinate? get left => replaceLast(last?.left);
-  Coordinate? get down => replaceLast(last?.down);
-  Coordinate? get up => replaceLast(last?.up);
-  Coordinate? get right => replaceLast(last?.right);
+  Coordinate get outof => withLastRemoved;
+
+  Coordinate? get left => withLastReplaced(last?.left);
+  Coordinate? get down => withLastReplaced(last?.down);
+  Coordinate? get up => withLastReplaced(last?.up);
+  Coordinate? get right => withLastReplaced(last?.right);
   BiTri? get last => sequence.lastOrNull;
-  Coordinate? replaceLast(BiTri? newLast) {
+
+  Coordinate withLastAdded(BiTri newLast) {
+    return Coordinate([...sequence, newLast], depthOffset);
+  }
+
+  Coordinate get withLastRemoved {
+    if (sequence.isEmpty) return Coordinate([], depthOffset);
+    return Coordinate(sequence.sublist(0, sequence.length - 1), depthOffset);
+  }
+
+  Coordinate? withLastReplaced(BiTri? newLast) {
     if (newLast == null) return null;
-    return Coordinate([...withoutLast, newLast], depthOffset);
+    return withLastRemoved.withLastAdded(newLast);
   }
 
   Coordinate? rebase(int byDepth) {
@@ -52,17 +65,6 @@ class Coordinate {
     ], depthOffset);
   }
 
-  List<BiTri> get withoutLast {
-    if (sequence.isEmpty || sequence.length == 1) return [];
-    return sequence.sublist(0, sequence.length - 1);
-  }
-
-  List<Coordinate> get next =>
-      BiTri.all()
-          .map((bt) => into.replaceLast(bt))
-          .whereType<Coordinate>()
-          .toList();
-
   Rect rect({Rect unit = const Rect.fromLTWH(0, 0, 1, 1)}) {
     Rect narrow(BiTri bt, Rect bounds) {
       Tri xt = bt.a, yt = bt.b;
@@ -89,7 +91,8 @@ class Coordinate {
     return ret;
   }
 
-  Iterable<Coordinate> get adjacents {
+  /// Returns the set of coordinates that can be moved to on the same floor.
+  Iterable<Coordinate> get neighbors {
     return [
       up,
       left,
@@ -100,6 +103,31 @@ class Coordinate {
       down?.left,
       down?.right,
       // TODO does this include into/outof? for now no.
+    ].whereType<Coordinate>();
+  }
+
+  /// Returns all other coordinates on the same floor.
+  Iterable<Coordinate> get floor {
+    return BiTri.all.map((bt) => withLastReplaced(bt)).whereType<Coordinate>();
+  }
+
+  /// Returns all coordinates visible from here.
+  Iterable<Coordinate> get visible {
+    Iterable<Coordinate> treeOf(Coordinate? root) {
+      if (root == null) return [];
+      return [
+        root,
+        ...root.into.floor,
+        ...root.into.floor.expand((adj) => adj.into.floor),
+      ];
+    }
+
+    return [
+      ...treeOf(outof),
+      ...treeOf(outof.up),
+      ...treeOf(outof.down),
+      ...treeOf(outof.left),
+      ...treeOf(outof.right),
     ].whereType<Coordinate>();
   }
 
@@ -117,6 +145,5 @@ class Coordinate {
   }
 
   @override
-  // TODO: implement hashCode
   int get hashCode => Object.hashAll(sequence);
 }

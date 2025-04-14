@@ -4,7 +4,6 @@ import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/game/move_changes.dart';
 import 'package:quail_57/gameplay/domain/entity/tile.dart';
 import 'package:quail_57/shared/data/generate.dart';
-import 'package:quail_57/shared/ui/list_choice.dart';
 
 class Tree {
   final Map<Coordinate, Tile> map;
@@ -20,6 +19,16 @@ class Tree {
     );
     ret = ret.removeFloors(coordinate);
     return ret;
+  }
+
+  Tree crop(bool Function(Coordinate) where) {
+    return Tree(
+      map: {
+        for (final entry in map.entries)
+          if (where(entry.key)) entry.key: entry.value,
+      },
+      depthOffset: depthOffset,
+    );
   }
 
   Tree get preparedForTurn {

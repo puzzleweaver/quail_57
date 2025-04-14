@@ -30,6 +30,7 @@ class GameplayPainter extends CustomPainter {
       renderDepth: 2,
       animation: animation,
       idleValue: idleValue,
+      center: game.youCoordinate,
     );
 
     // Rect screen = Rect.fromLTWH(0, 0, size.width, size.height);

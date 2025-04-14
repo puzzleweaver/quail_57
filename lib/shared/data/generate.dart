@@ -14,22 +14,10 @@ import 'package:quail_57/shared/ui/list_choice.dart';
 import 'package:quail_57/shared/ui/map_range_pick.dart';
 
 class Generate {
-  static BiTri biTri({bool allowMiddle = false}) {
-    BiTri ret = BiTri(Tri.random, Tri.random);
-    if (!allowMiddle && ret.isMiddle) return biTri(allowMiddle: allowMiddle);
-    return ret;
-  }
-
-  static Coordinate coordinate(int length, {BiTri? last}) {
-    return Coordinate([
-      for (int i = 0; i < length; i++)
-        if (i == length - 1) (last ?? biTri()) else biTri(),
-    ], 0);
-  }
+  static BiTri get biTri => BiTri(Tri.random, Tri.random);
 
   static Coordinate step(Tree tree, Coordinate coordinate) {
-    // TODO improve this lmao
-    return [...coordinate.adjacents, coordinate.into, coordinate.outof]
+    return [...coordinate.neighbors, coordinate.into, coordinate.outof]
         .whereType<Coordinate>()
         .where((step) => tree.isMoveAllowed(coordinate, step))
         .toList()

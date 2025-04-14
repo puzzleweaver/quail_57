@@ -27,11 +27,8 @@ class BiTri {
     return other.a == a && other.b == b;
   }
 
-  static Iterable<BiTri> all({bool allowMiddle = false}) {
-    Iterable<BiTri> ret = Tri.all.expand(
-      (a) => Tri.all.map((b) => BiTri(a, b)),
-    );
-    return allowMiddle ? ret : ret.where((bt) => !bt.isMiddle);
+  static Iterable<BiTri> get all {
+    return Tri.all.expand((a) => Tri.all.map((b) => BiTri(a, b)));
   }
 
   @override
