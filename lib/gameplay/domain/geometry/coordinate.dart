@@ -92,7 +92,7 @@ class Coordinate {
   }
 
   /// Returns the set of coordinates that can be moved to on the same floor.
-  Iterable<Coordinate> get neighbors {
+  Iterable<Coordinate> get adjacents {
     return [
       up,
       left,
@@ -102,33 +102,12 @@ class Coordinate {
       up?.right,
       down?.left,
       down?.right,
-      // TODO does this include into/outof? for now no.
     ].whereType<Coordinate>();
   }
 
   /// Returns all other coordinates on the same floor.
   Iterable<Coordinate> get floor {
     return BiTri.all.map((bt) => withLastReplaced(bt)).whereType<Coordinate>();
-  }
-
-  /// Returns all coordinates visible from here.
-  Iterable<Coordinate> get visible {
-    Iterable<Coordinate> treeOf(Coordinate? root) {
-      if (root == null) return [];
-      return [
-        root,
-        ...root.into.floor,
-        ...root.into.floor.expand((adj) => adj.into.floor),
-      ];
-    }
-
-    return [
-      ...treeOf(outof),
-      ...treeOf(outof.up),
-      ...treeOf(outof.down),
-      ...treeOf(outof.left),
-      ...treeOf(outof.right),
-    ].whereType<Coordinate>();
   }
 
   @override

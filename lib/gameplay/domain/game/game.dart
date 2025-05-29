@@ -2,11 +2,11 @@ import 'dart:developer';
 
 import 'package:quail_57/gameplay/domain/entity/bug.dart';
 import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
+import 'package:quail_57/gameplay/domain/game/turn.dart';
 import 'package:quail_57/gameplay/domain/game/turn_queue.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/entity/tile_type.dart';
 import 'package:quail_57/gameplay/domain/game/tree.dart';
-import 'package:quail_57/shared/data/generate.dart';
 import 'package:quail_57/shared/domain/report_boxer.dart';
 import 'package:quail_57/shared/ui/string_id_format.dart';
 
@@ -17,6 +17,7 @@ class Game {
   final Coordinate youCoordinate;
   final Coordinate previousYouCoordinate;
   final TurnQueue queue;
+  final List<String> activityLog;
 
   Game({
     required this.index,
@@ -25,6 +26,7 @@ class Game {
     required this.previousYouCoordinate,
     required this.youCoordinate,
     required this.queue,
+    required this.activityLog,
   });
 
   static Game initial(BugType type) {
@@ -37,6 +39,7 @@ class Game {
       previousYouCoordinate: youCoordinate,
       youCoordinate: youCoordinate,
       queue: TurnQueue(tree.allBugIds()),
+      activityLog: ["Welcome!"],
     );
   }
 
@@ -44,6 +47,8 @@ class Game {
   bool get youWon => currentTree[youCoordinate].type == TileType.goal;
   bool get isEndgame => youWon || youLost;
   String? get nextMoverId => queue.nextMoverId;
+  Coordinate? get nextMoverCoordinate =>
+      currentTree.findBug(where: (bug) => bug.id == nextMoverId);
 
   int? get _rebaseAmount {
     Coordinate? youCoordinate = this.youCoordinate;
@@ -62,75 +67,83 @@ class Game {
       currentTree: currentTree.rebase(byDepth),
       index: index,
       queue: queue,
+      activityLog: activityLog,
     );
   }
 
-  Game _advanceTurn(Tree nextTree, {Coordinate? nextYouCoordinate}) {
-    nextYouCoordinate ??= youCoordinate;
-
-    TurnQueue nextQueue = queue.nextQueue(nextTree.allBugIds());
-
-    logReport();
-    return Game(
-      currentTree: nextTree.removeFloors(root),
-      previousTree: currentTree,
-      previousYouCoordinate: youCoordinate,
-      youCoordinate: nextYouCoordinate,
-      index: index + 1,
-      queue: nextQueue,
-    ).rebased;
+  bool isOnScreen(Coordinate? coordinate) {
+    if (coordinate == null) return false;
+    return coordinate == root ||
+        coordinate.outof == root ||
+        coordinate.outof.outof == root;
   }
 
-  /// advance one turn without changing anything.
-  Game _skipTurn() {
-    return _advanceTurn(currentTree);
+  Game advanceQueue() {
+    return Game(
+      index: index + 1,
+      previousTree: previousTree,
+      currentTree: currentTree,
+      previousYouCoordinate: previousYouCoordinate,
+      youCoordinate: youCoordinate,
+      queue: queue.nextQueue(currentTree.allBugIds()),
+      activityLog: activityLog,
+    );
+  }
+
+  /// advance one turn without changing anything
+  Game skipTurn() {
+    return advanceQueue();
+  }
+
+  Game doTurn(Turn turn) {
+    logReport();
+    Game gameAfterTurn =
+        Game(
+          currentTree: turn.nextTree.removeFloors(root),
+          previousTree: currentTree,
+          previousYouCoordinate: youCoordinate,
+          youCoordinate: turn.nextYouCoordinate ?? youCoordinate,
+          index: index,
+          queue: queue,
+          activityLog: turn.updatedActivityLogs(activityLog),
+        ).rebased.advanceQueue();
+
+    return gameAfterTurn.doBugTurns(
+      until: (laterGame) {
+        return laterGame.isYourTurn ||
+            isOnScreen(laterGame.nextMoverCoordinate);
+      },
+    );
   }
 
   /// Randomly move the next mover
   Game doBugTurn() {
-    assert(nextMoverId != you?.id);
-    Coordinate? mover = currentTree.findBug(
-      where: (bug) => bug.id == nextMoverId,
-    );
-    //
-    if (mover == null) return _skipTurn();
-    return _advanceTurn(
-      currentTree.preparedForTurn.withMove(
-        mover,
-        Generate.step(currentTree, mover),
+    Coordinate? where = nextMoverCoordinate;
+    if (where == null) return skipTurn();
+    return doTurn(Turn.bug(game: this, bugCoordinate: where));
+  }
+
+  Game doYourTurn(Coordinate to) {
+    // terminate ongoing animations,
+    // do all bugs' turns that happen before it's your turn again
+    Game game = clearAnimations().doBugTurns(until: (game) => game.isYourTurn);
+
+    return game.doTurn(
+      Turn.yours(
+        game: game,
+        to: to,
+        activityDescription: "- You did something.",
       ),
     );
   }
 
-  Game doYourTurn(Coordinate to) {
-    Game game = doTurnsUntil((game) => game.nextMoverId == you?.id);
-    Tree nextTree = game.currentTree.preparedForTurn.withMove(
-      game.youCoordinate,
-      to,
-    );
-
-    return _advanceTurn(
-      nextTree,
-      nextYouCoordinate: nextTree.findBug(where: (bug) => bug.isYou),
-    );
-  }
-
-  Game doTurnsUntil(bool Function(Game game) until) {
+  Game doBugTurns({required bool Function(Game game) until}) {
     Game ret = this;
     for (int i = 0; i < 1000; i++) {
       if (until(ret)) return ret;
-      ret = ret.doBugTurn();
-    }
-    throw UnimplementedError(
-      "Should never fall through (or maybe you need to increase the cap?)",
-    );
-  }
-
-  Game skipTurnsUntil(bool Function(Game game) until) {
-    Game ret = this;
-    for (int i = 0; i < 1000; i++) {
-      if (until(ret)) return ret;
-      ret = ret._skipTurn();
+      bool onScreen = !ret.isOnScreen(ret.nextMoverCoordinate);
+      if (onScreen) ret = ret.doBugTurn();
+      if (!onScreen) ret = ret.skipTurn();
     }
     throw UnimplementedError(
       "Should never fall through (or maybe you need to increase the cap?)",
@@ -151,6 +164,18 @@ class Game {
     return entity;
   }
 
+  Game clearAnimations() {
+    return Game(
+      index: index,
+      previousTree: previousTree,
+      currentTree: currentTree.preparedForTurn,
+      previousYouCoordinate: previousYouCoordinate,
+      youCoordinate: youCoordinate,
+      queue: queue,
+      activityLog: activityLog,
+    );
+  }
+
   void logReport() {
     int bugCount = currentTree.allBugCoordinates().length;
     int entryCount = currentTree.map.length;
@@ -163,6 +188,7 @@ class Game {
         "Turns So Far: $index",
         "Next Mover: ${queue.moverIds.firstOrNull.idFormat}",
         "Left In Queue: ${queue.moverIds.length}",
+        "Most Recent Action: ${activityLog.lastOrNull}",
       ].join("\n"),
     );
     log(report);

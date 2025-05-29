@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/game/game.dart';
 import 'package:quail_57/gameplay/ui/animated_game_widget.dart';
+import 'package:quail_57/gameplay/ui/gameplay_back_interceptor.dart';
 import 'package:quail_57/gameplay/ui/outcome_page.dart';
-import 'package:quail_57/home/ui/are_you_sure_dialog.dart';
-import 'package:quail_57/shared/ui/app_scaffold.dart';
 
 class GameplayPage extends StatefulWidget {
   final BugType initialBug;
@@ -34,31 +33,14 @@ class GameplayPageState extends State<GameplayPage> {
     Size size = MediaQuery.of(context).size;
     double dim = min(size.width, size.height);
     size = Size(dim, dim);
-    return PopScope<bool>(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, Object? result) async {
-        if (didPop) {
-          return;
-        }
-        final bool shouldPop =
-            await showDialog(
-              context: context,
-              builder:
-                  (context) => AreYouSureDialog(
-                    title: Text("Exit Game?"),
-                    message: Text("Your progress will not be saved."),
-                    cancel: Text("continue playing"),
-                    confirm: Text("exit"),
-                  ),
-            ) ??
-            false;
-        if (context.mounted && shouldPop) {
-          Navigator.pop(context);
-        }
-      },
-      child: AppScaffold(
-        title: Text("${game.you?.health} | ${game.you?.belly}"),
-        child: Center(
+    return GameplayBackInterceptor(
+      child: Scaffold(
+        appBar: AppBar(
+          foregroundColor: Colors.white,
+          title: Text("Hello"),
+          backgroundColor: Colors.black,
+        ),
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -68,6 +50,29 @@ class GameplayPageState extends State<GameplayPage> {
                 setGame: (newGame) {
                   setState(() => game = newGame);
                 },
+              ),
+              Expanded(
+                child: Container(
+                  color: Colors.black,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Health: ${game.you?.health}\nFullness: ${game.you?.belly}",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Divider(indent: 30, endIndent: 30),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Text(
+                            game.activityLog.reversed.join("\n"),
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

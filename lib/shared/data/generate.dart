@@ -17,7 +17,7 @@ class Generate {
   static BiTri get biTri => BiTri(Tri.random, Tri.random);
 
   static Coordinate step(Tree tree, Coordinate coordinate) {
-    return [...coordinate.neighbors, coordinate.into, coordinate.outof]
+    return [...coordinate.adjacents, coordinate.into, coordinate.outof]
         .whereType<Coordinate>()
         .where((step) => tree.isMoveAllowed(coordinate, step))
         .toList()

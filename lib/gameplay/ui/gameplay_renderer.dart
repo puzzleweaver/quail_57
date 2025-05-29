@@ -97,7 +97,8 @@ class GameplayRenderer {
   }
 
   void drawTile(Game game, Coordinate where, Rect rect) {
-    if (game.youCoordinate == where) drawRect(rect);
+    // if (game.youCoordinate == where) strokeRect(rect, Colors.red);
+    // if (game.isOnScreen(where)) strokeRect(rect, Colors.cyanAccent);
 
     // shadow (on the things underneath)
     drawShadowPane(rect, where.depth);
@@ -131,11 +132,11 @@ class GameplayRenderer {
     );
   }
 
-  void drawRect(Rect rect) {
+  void strokeRect(Rect rect, Color color) {
     canvas.drawRect(
       rect,
       Paint()
-        ..color = Colors.red
+        ..color = color
         ..strokeWidth = 3
         ..style = PaintingStyle.stroke,
     );

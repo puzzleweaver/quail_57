@@ -67,9 +67,9 @@ enum PersistedBugInt {
       gamesWon => "Games Won",
       gamesLost => "Games Lost",
       gamesPlayed => "Games Played",
-      timesKilled => "Times Killed",
-      timesKilledBy => "Tiles Killed",
-      maxTurnsSurvived => "Maximum Turns Survived",
+      timesKilled => "Killed",
+      timesKilledBy => "Killed by",
+      maxTurnsSurvived => "Longest Run",
       minTurnsToWin => "Minimum Turns to Victory",
       maxKills => "Maximum Kills",
     };

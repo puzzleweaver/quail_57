@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:quail_57/gameplay/domain/geometry/bitri.dart';
 import 'package:quail_57/gameplay/domain/geometry/coordinate.dart';
 import 'package:quail_57/gameplay/domain/game/game.dart';
 import 'package:quail_57/gameplay/ui/gameplay_renderer.dart';
@@ -56,15 +55,6 @@ class GameplayPainter extends CustomPainter {
       if (movedOutof) root = root;
     }
     treeFrom(root);
-
-    // offscreenMaybe
-    if (isTall) {
-      treeFrom(root.withOffset(BiTri.middle.up));
-      treeFrom(root.withOffset(BiTri.middle.down));
-    } else {
-      treeFrom(root.withOffset(BiTri.middle.left));
-      treeFrom(root.withOffset(BiTri.middle.right));
-    }
 
     // if (game.you?.isInDanger == true) {
     //   if (idleValue == 1) renderer.drawOverlay(Colors.red.withAlpha(50));

@@ -7,6 +7,7 @@ import 'package:quail_57/gameplay/domain/game/game.dart';
 import 'package:quail_57/gameplay/ui/gameplay_painter.dart';
 import 'package:quail_57/gameplay/ui/viewport.dart';
 import 'package:quail_57/settings/domain/persisted.dart';
+import 'package:quail_57/shared/ui/rect_animation.dart';
 import 'package:quail_57/shared/ui/size_is_tall.dart';
 
 class AnimatedGameWidget extends StatefulWidget {
@@ -84,12 +85,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
     // don't automatically move if it's the player's turn.
     if (game.isYourTurn) return;
 
-    setGame(
-      game
-          // TODO don't animate offscreen guys
-          // .skipTurnsUntil((game) => game.currentTree.isOnScreen(game.nextMoverId))
-          .doBugTurn(),
-    );
+    setGame(game.clearAnimations().doBugTurn());
   }
 
   initIdleTimer() {
@@ -139,17 +135,7 @@ class AnimatedGameWidgetState extends State<AnimatedGameWidget>
         false;
 
     Coordinate current = game.youCoordinate;
-    Iterable<Coordinate> adjacents =
-        [
-          current.right,
-          current.up,
-          current.left,
-          current.down,
-          current.left?.up,
-          current.left?.down,
-          current.right?.up,
-          current.right?.down,
-        ].whereType<Coordinate>();
+    Iterable<Coordinate> adjacents = current.adjacents;
     // if you tap the tile you're on, you go up or down
     if (check(current)) {
       if (game.currentTree[current].hasFloor) return moveYou(current.outof);

@@ -1,5 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:quail_57/gameplay/domain/entity/bug_type.dart';
 import 'package:quail_57/gameplay/domain/game/game.dart';
+import 'package:quail_57/settings/domain/persisted.dart';
 import 'package:quail_57/settings/ui/titled_page.dart';
 import 'package:quail_57/shared/ui/app_scaffold.dart';
 
@@ -17,8 +21,22 @@ class OutcomePageState extends State<OutcomePage> {
 
   @override
   void initState() {
-    // TODO update statistics
+    updateStats();
     super.initState();
+  }
+
+  void updateStats() {
+    BugType type = game.you!.type;
+    if (game.youWon) PersistedBugInt.gamesWon[type]++;
+    if (game.youLost) PersistedBugInt.gamesLost[type]++;
+    PersistedBugInt.maxKills[type] = max(
+      PersistedBugInt.maxKills[type],
+      game.you?.kills ?? 0,
+    );
+    PersistedBugInt.maxTurnsSurvived[type] = max(
+      PersistedBugInt.maxTurnsSurvived[type],
+      game.index,
+    );
   }
 
   @override
